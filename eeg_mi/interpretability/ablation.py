@@ -206,7 +206,7 @@ class TemporalAblationStudy:
 
             results['window_centers'].append(center_time)
             results['window_starts'].append(times[start_idx])
-            results['window_ends'].append(times[end_idx])
+            results['window_ends'].append(times[min(end_idx, n_samples - 1)])
             results['accuracies'].append(acc)
             results['accuracy_drops'].append(baseline_acc - acc)
 
