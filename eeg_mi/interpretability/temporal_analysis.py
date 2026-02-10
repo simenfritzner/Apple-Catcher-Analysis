@@ -84,6 +84,8 @@ class TemporalImportanceAnalyzer:
             saliency_map = self.saliency.integrated_gradients(x)
         elif method == 'gradient_x_input':
             saliency_map = self.saliency.gradient_x_input(x)
+        elif method == 'deeplift':
+            saliency_map = self.saliency.deeplift(x)
         else:
             raise ValueError(f"Unknown method: {method}")
 
@@ -146,6 +148,8 @@ class TemporalImportanceAnalyzer:
             saliency_map = self.saliency.integrated_gradients(x)
         elif method == 'gradient_x_input':
             saliency_map = self.saliency.gradient_x_input(x)
+        elif method == 'deeplift':
+            saliency_map = self.saliency.deeplift(x)
         else:
             raise ValueError(f"Unknown method: {method}")
 
@@ -263,6 +267,8 @@ class TemporalImportanceAnalyzer:
             saliency_map = self.saliency.integrated_gradients(x)
         elif method == 'gradient_x_input':
             saliency_map = self.saliency.gradient_x_input(x)
+        elif method == 'deeplift':
+            saliency_map = self.saliency.deeplift(x)
         else:
             raise ValueError(f"Unknown method: {method}")
 
