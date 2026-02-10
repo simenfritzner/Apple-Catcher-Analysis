@@ -5,7 +5,7 @@ Provides plotting functions for saliency maps, ablation results,
 and temporal importance profiles.
 """
 
-from typing import Optional, List, Tuple
+from typing import Dict, Optional, List, Tuple, Union
 import numpy as np
 import torch
 import matplotlib.pyplot as plt
@@ -586,3 +586,224 @@ def create_comprehensive_report(
     print(f"  - Ratio (pre/post): {pre_post_results['importance_ratio']:.2f}")
     print(f"  - Pre-cue accuracy drop: {pre_post_results['pre_cue_accuracy_drop']:.3f}")
     print(f"  - Post-cue accuracy drop: {pre_post_results['post_cue_accuracy_drop']:.3f}")
+
+
+# --------------------------------------------------------------------------
+# Artifact investigation visualizations (Phase 6)
+# --------------------------------------------------------------------------
+
+def plot_channel_group_comparison(
+    group_results: "Union[Dict, object]",
+    title: str = "Channel Group Saliency Importance",
+    save_path: Optional[Path] = None,
+    figsize: Tuple[int, int] = (10, 6),
+) -> plt.Figure:
+    """
+    Bar chart comparing saliency importance across channel groups.
+
+    Annotates the frontal/central ratio so readers can immediately see
+    whether the model over-relies on frontal (artifact-prone) channels.
+
+    Args:
+        group_results: A ChannelGroupResult dataclass (from
+            ArtifactAnalyzer.analyze_channel_groups) or a dict with
+            'group_importance' and 'frontal_central_ratio' keys.
+        title: Plot title.
+        save_path: Optional path to save the figure.
+        figsize: Figure size.
+
+    Returns:
+        Matplotlib Figure.
+    """
+    # Accept both dataclass and plain dict
+    if hasattr(group_results, 'group_importance'):
+        importance = group_results.group_importance
+        ratio = group_results.frontal_central_ratio
+    else:
+        importance = group_results['group_importance']
+        ratio = group_results['frontal_central_ratio']
+
+    regions = list(importance.keys())
+    values = [importance[r] for r in regions]
+
+    region_colors = {
+        'frontal': '#E74C3C',
+        'central': '#3498DB',
+        'parietal': '#2ECC71',
+        'occipital': '#9B59B6',
+        'temporal': '#F39C12',
+    }
+    colors = [region_colors.get(r, '#95A5A6') for r in regions]
+
+    fig, ax = plt.subplots(figsize=figsize)
+    bars = ax.bar(regions, values, color=colors, alpha=0.8, edgecolor='black')
+
+    # Annotate bar values
+    for bar, val in zip(bars, values):
+        height = bar.get_height()
+        ax.text(
+            bar.get_x() + bar.get_width() / 2.0,
+            height,
+            f'{val:.4f}',
+            ha='center',
+            va='bottom',
+            fontsize=10,
+        )
+
+    ax.set_ylabel('Mean Saliency Importance', fontsize=11)
+    ax.set_title(title, fontsize=12, fontweight='bold')
+    ax.grid(True, alpha=0.3, axis='y')
+
+    # Annotate frontal/central ratio
+    ax.annotate(
+        f'Frontal / Central ratio: {ratio:.2f}',
+        xy=(0.95, 0.95),
+        xycoords='axes fraction',
+        ha='right',
+        va='top',
+        fontsize=11,
+        bbox=dict(boxstyle='round,pad=0.3', facecolor='wheat', alpha=0.7),
+    )
+
+    plt.tight_layout()
+
+    if save_path:
+        fig.savefig(save_path, dpi=300, bbox_inches='tight')
+        print(f"Saved figure to {save_path}")
+
+    return fig
+
+
+def plot_artifact_trial_analysis(
+    clean_vs_artifact_results: Dict[str, float],
+    title: str = "Clean vs Artifact Trial Accuracy",
+    save_path: Optional[Path] = None,
+    figsize: Tuple[int, int] = (8, 6),
+) -> plt.Figure:
+    """
+    Side-by-side bar chart comparing accuracy on clean, artifact, and all trials.
+
+    Args:
+        clean_vs_artifact_results: Dictionary returned by
+            ArtifactAnalyzer.compare_clean_vs_artifact_trials.
+        title: Plot title.
+        save_path: Optional path to save the figure.
+        figsize: Figure size.
+
+    Returns:
+        Matplotlib Figure.
+    """
+    r = clean_vs_artifact_results
+
+    categories = ['All Trials', 'Clean Trials', 'Artifact Trials']
+    accuracies = [r['all_accuracy'], r['clean_accuracy'], r['artifact_accuracy']]
+    counts = [r['n_total'], r['n_clean'], r['n_artifact']]
+    colors = ['#3498DB', '#2ECC71', '#E74C3C']
+
+    fig, ax = plt.subplots(figsize=figsize)
+    bars = ax.bar(categories, accuracies, color=colors, alpha=0.8, edgecolor='black')
+
+    # Annotate values and trial counts
+    for bar, acc, n in zip(bars, accuracies, counts):
+        height = bar.get_height()
+        if np.isnan(acc):
+            label = f'N/A\n(n={n})'
+        else:
+            label = f'{acc:.3f}\n(n={n})'
+        ax.text(
+            bar.get_x() + bar.get_width() / 2.0,
+            height,
+            label,
+            ha='center',
+            va='bottom',
+            fontsize=10,
+        )
+
+    ax.set_ylabel('Accuracy', fontsize=11)
+    ax.set_title(title, fontsize=12, fontweight='bold')
+    ax.set_ylim(0, 1.15)
+    ax.grid(True, alpha=0.3, axis='y')
+
+    plt.tight_layout()
+
+    if save_path:
+        fig.savefig(save_path, dpi=300, bbox_inches='tight')
+        print(f"Saved figure to {save_path}")
+
+    return fig
+
+
+def plot_single_channel_ablation(
+    drops: np.ndarray,
+    channel_names: List[str],
+    title: str = "Single Channel Ablation Impact",
+    save_path: Optional[Path] = None,
+    figsize: Tuple[int, int] = (10, 10),
+) -> plt.Figure:
+    """
+    Horizontal bar chart of per-channel accuracy drops, sorted by impact.
+
+    Channels are color-coded by scalp region:
+        frontal=red, central=blue, parietal=green,
+        occipital=purple, temporal=orange, other=grey.
+
+    Args:
+        drops: Array of accuracy drops per channel (n_channels,).
+        channel_names: List of channel names.
+        title: Plot title.
+        save_path: Optional path to save the figure.
+        figsize: Figure size.
+
+    Returns:
+        Matplotlib Figure.
+    """
+    from .artifacts import _classify_channel
+
+    region_colors = {
+        'frontal': '#E74C3C',
+        'central': '#3498DB',
+        'parietal': '#2ECC71',
+        'occipital': '#9B59B6',
+        'temporal': '#F39C12',
+        None: '#95A5A6',
+    }
+
+    # Sort by accuracy drop (descending)
+    sorted_indices = np.argsort(drops)[::-1]
+    sorted_drops = drops[sorted_indices]
+    sorted_names = [channel_names[i] for i in sorted_indices]
+    sorted_colors = [
+        region_colors.get(_classify_channel(name), '#95A5A6')
+        for name in sorted_names
+    ]
+
+    fig, ax = plt.subplots(figsize=figsize)
+    y_pos = np.arange(len(sorted_names))
+
+    ax.barh(y_pos, sorted_drops, color=sorted_colors, edgecolor='black', alpha=0.8)
+    ax.set_yticks(y_pos)
+    ax.set_yticklabels(sorted_names, fontsize=9)
+    ax.invert_yaxis()
+    ax.set_xlabel('Accuracy Drop', fontsize=11)
+    ax.set_title(title, fontsize=12, fontweight='bold')
+    ax.grid(True, alpha=0.3, axis='x')
+
+    # Legend for region colors
+    from matplotlib.patches import Patch
+    legend_elements = [
+        Patch(facecolor=region_colors['frontal'], edgecolor='black', label='Frontal'),
+        Patch(facecolor=region_colors['central'], edgecolor='black', label='Central'),
+        Patch(facecolor=region_colors['parietal'], edgecolor='black', label='Parietal'),
+        Patch(facecolor=region_colors['occipital'], edgecolor='black', label='Occipital'),
+        Patch(facecolor=region_colors['temporal'], edgecolor='black', label='Temporal'),
+        Patch(facecolor=region_colors[None], edgecolor='black', label='Other'),
+    ]
+    ax.legend(handles=legend_elements, loc='lower right', fontsize=9)
+
+    plt.tight_layout()
+
+    if save_path:
+        fig.savefig(save_path, dpi=300, bbox_inches='tight')
+        print(f"Saved figure to {save_path}")
+
+    return fig
