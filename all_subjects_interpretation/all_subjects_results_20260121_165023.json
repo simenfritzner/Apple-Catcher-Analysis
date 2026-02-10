@@ -1,0 +1,63 @@
+{
+  "training_mode": "all_subjects",
+  "n_subjects": 40,
+  "n_train_samples": 6400,
+  "n_val_samples": 1600,
+  "val_accuracy": 0.765,
+  "config": {
+    "dataset": {
+      "data_path": "data/raw/apple_catcher",
+      "n_classes": 2,
+      "max_trials": 200,
+      "event_ids": {
+        "MI_left": 0,
+        "MI_right": 1
+      }
+    },
+    "preprocessing": {
+      "normalization": "none",
+      "method": "raw",
+      "tmin": -1.0,
+      "tmax": 2.0,
+      "l_freq": null,
+      "h_freq": null
+    },
+    "cross_validation": {
+      "type": "loso",
+      "train_size": 200,
+      "target_cal_size": 100,
+      "test_start": 100,
+      "test_end": 200
+    },
+    "logging": {
+      "level": "INFO",
+      "save_results": true,
+      "results_dir": "results"
+    },
+    "random_seed": 42,
+    "model": {
+      "type": "cnn",
+      "name": "EEGNet All Subjects - Interpretation",
+      "F1": 8,
+      "D": 2,
+      "F2": 16,
+      "kernel_length": 64,
+      "dropout": 0.3
+    },
+    "training": {
+      "learning_rate": 0.001,
+      "dropout": 0.3,
+      "batch_size": 32,
+      "epochs": 100,
+      "two_stage": false,
+      "optimizer": "adam",
+      "device": "cuda",
+      "val_split": 0.2
+    },
+    "output": {
+      "results_dir": "results/all_subjects_interpretation",
+      "save_model": true,
+      "save_predictions": true
+    }
+  }
+}
