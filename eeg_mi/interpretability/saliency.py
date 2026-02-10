@@ -5,7 +5,7 @@ Provides gradient-based visualization methods to understand which parts
 of the input (time x channel) are most important for model predictions.
 """
 
-from typing import Tuple, Optional
+from typing import Dict, List, Tuple, Optional
 import numpy as np
 import torch
 import torch.nn as nn
@@ -254,3 +254,95 @@ class SaliencyMapGenerator:
         times = np.arange(n_samples) / sfreq + tmin
 
         return times, importance_map, std_map
+
+    def deeplift(
+        self,
+        x: torch.Tensor,
+        target_class: Optional[int] = None
+    ) -> np.ndarray:
+        """
+        Compute DeepLIFT attribution saliency map.
+
+        Uses captum's DeepLift implementation with a zero baseline.
+        Complements gradient-based methods by using a reference-based
+        contribution approach that handles non-linearities differently.
+
+        Args:
+            x: Input tensor of shape (batch, 1, channels, samples)
+            target_class: Class to compute attribution for. If None, uses predicted class.
+
+        Returns:
+            Saliency map of shape (batch, channels, samples)
+        """
+        from captum.attr import DeepLift
+
+        x = x.to(self.device)
+
+        if target_class is None:
+            with torch.no_grad():
+                output = self.model(x)
+                target_class = output.argmax(dim=1)
+        elif isinstance(target_class, int):
+            target_class = torch.tensor([target_class] * x.shape[0], device=self.device)
+
+        dl = DeepLift(self.model)
+        baseline = torch.zeros_like(x)
+
+        attributions = dl.attribute(x, baselines=baseline, target=target_class)
+        saliency = attributions.abs().squeeze(1).cpu().detach().numpy()
+
+        return saliency
+
+    def compare_methods(
+        self,
+        x: torch.Tensor,
+        target_class: Optional[int] = None,
+        methods: Optional[List[str]] = None,
+        sfreq: float = 250.0,
+        tmin: float = -1.0
+    ) -> Dict[str, Dict[str, np.ndarray]]:
+        """
+        Run multiple attribution methods on the same data for comparison.
+
+        Args:
+            x: Input tensor of shape (batch, 1, channels, samples)
+            target_class: Class to compute attribution for
+            methods: List of method names. Default: all four methods.
+            sfreq: Sampling frequency in Hz
+            tmin: Start time in seconds
+
+        Returns:
+            Dictionary keyed by method name, each containing:
+                - saliency_map: Raw saliency map (batch, channels, samples)
+                - temporal_importance: Aggregated over channels (samples,)
+                - channel_importance: Aggregated over time (channels,)
+                - times: Time vector in seconds
+        """
+        if methods is None:
+            methods = ['vanilla', 'integrated_gradients', 'gradient_x_input', 'deeplift']
+
+        method_funcs = {
+            'vanilla': self.vanilla_gradient,
+            'integrated_gradients': self.integrated_gradients,
+            'gradient_x_input': self.gradient_x_input,
+            'deeplift': self.deeplift,
+        }
+
+        results: Dict[str, Dict[str, np.ndarray]] = {}
+
+        for method in methods:
+            if method not in method_funcs:
+                raise ValueError(f"Unknown method: {method}")
+
+            saliency_map = method_funcs[method](x, target_class)
+            times, temporal_importance = self.compute_temporal_importance(saliency_map, sfreq, tmin)
+            channel_importance = self.compute_channel_importance(saliency_map)
+
+            results[method] = {
+                'saliency_map': saliency_map,
+                'temporal_importance': temporal_importance,
+                'channel_importance': channel_importance,
+                'times': times,
+            }
+
+        return results

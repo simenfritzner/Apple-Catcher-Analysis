@@ -5,6 +5,7 @@ Provides plotting functions for saliency maps, ablation results,
 and temporal importance profiles.
 """
 
+from typing import Dict, Optional, List, Tuple
 from typing import Dict, Optional, List, Tuple, Union
 import numpy as np
 import torch
@@ -588,6 +589,56 @@ def create_comprehensive_report(
     print(f"  - Post-cue accuracy drop: {pre_post_results['post_cue_accuracy_drop']:.3f}")
 
 
+def plot_method_comparison(
+    comparison_results: Dict[str, Dict[str, np.ndarray]],
+    cue_onset: float = 0.0,
+    save_path: Optional[Path] = None,
+    figsize: Tuple[int, int] = (14, 3)
+) -> plt.Figure:
+    """
+    Plot temporal importance profiles for multiple attribution methods side by side.
+
+    Creates a multi-panel figure with one row per method so you can visually
+    compare how different attribution methods agree or disagree.
+
+    Args:
+        comparison_results: Dictionary from SaliencyMapGenerator.compare_methods()
+        cue_onset: Time of cue onset in seconds
+        save_path: Path to save figure
+        figsize: Figure size per row (width, height_per_row)
+
+    Returns:
+        Matplotlib figure
+    """
+    methods = list(comparison_results.keys())
+    n_methods = len(methods)
+
+    fig, axes = plt.subplots(
+        n_methods, 1,
+        figsize=(figsize[0], figsize[1] * n_methods),
+        sharex=True,
+        squeeze=False,
+    )
+
+    colors = plt.cm.tab10(np.linspace(0, 1, n_methods))
+
+    for i, method in enumerate(methods):
+        ax = axes[i, 0]
+        result = comparison_results[method]
+        times = result['times']
+        importance = result['temporal_importance']
+
+        ax.plot(times, importance, linewidth=2, color=colors[i])
+        ax.fill_between(times, 0, importance, alpha=0.3, color=colors[i])
+        ax.axvline(cue_onset, color='red', linestyle='--', alpha=0.7, label='Cue Onset')
+        ax.set_ylabel('Importance', fontsize=10)
+        ax.set_title(f'{method}', fontsize=11, fontweight='bold')
+        ax.legend(loc='upper right', fontsize=8)
+        ax.grid(True, alpha=0.3)
+
+    axes[-1, 0].set_xlabel('Time (s)', fontsize=11)
+
+    plt.suptitle('Attribution Method Comparison', fontsize=13, fontweight='bold')
 # --------------------------------------------------------------------------
 # Artifact investigation visualizations (Phase 6)
 # --------------------------------------------------------------------------
@@ -804,6 +855,7 @@ def plot_single_channel_ablation(
 
     if save_path:
         fig.savefig(save_path, dpi=300, bbox_inches='tight')
+        print(f"Saved method comparison plot to {save_path}")
         print(f"Saved figure to {save_path}")
 
     return fig
