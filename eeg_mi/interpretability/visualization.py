@@ -639,6 +639,15 @@ def plot_method_comparison(
     axes[-1, 0].set_xlabel('Time (s)', fontsize=11)
 
     plt.suptitle('Attribution Method Comparison', fontsize=13, fontweight='bold')
+    plt.tight_layout()
+
+    if save_path:
+        fig.savefig(save_path, dpi=300, bbox_inches='tight')
+        print(f"Saved method comparison plot to {save_path}")
+
+    return fig
+
+
 # --------------------------------------------------------------------------
 # Artifact investigation visualizations (Phase 6)
 # --------------------------------------------------------------------------
