@@ -202,11 +202,13 @@ class ERDERSAnalyzer:
             n_cycles = max(3, freq / 2.0)
             # scipy morlet2 width parameter: w = n_cycles * pi (approx)
             w = n_cycles
+            s = w * sfreq / (2 * np.pi * freq)
+
             wavelet_length = int(2 * w * sfreq / freq)
-            # Ensure odd length
+            # Ensure minimum length for stable wavelet
             wavelet_length = max(wavelet_length, 7)
 
-            wavelet = morlet2(wavelet_length, w, freq / sfreq)
+            wavelet = morlet2(wavelet_length, s, w)
 
             # Convolve signal with wavelet (using mode='same' to preserve length)
             convolved = np.convolve(signal, wavelet, mode='same')
