@@ -97,7 +97,7 @@ class SaliencyMapGenerator:
         Returns:
             Saliency map of shape (batch, channels, samples)
         """
-        x = x.to(self.device)
+        x = x.detach().to(self.device)
 
         # Use zero baseline if not provided
         if baseline is None:
@@ -113,8 +113,8 @@ class SaliencyMapGenerator:
 
         for alpha in alphas:
             # Interpolate between baseline and input
-            x_step = baseline + alpha * (x - baseline)
-            x_step.requires_grad = True
+            x_step = (baseline + alpha * (x - baseline)).detach()
+            x_step.requires_grad_(True)
 
             # Forward pass
             output = self.model(x_step)
@@ -161,8 +161,8 @@ class SaliencyMapGenerator:
             Saliency map of shape (batch, channels, samples)
         """
         # Get vanilla gradients
-        x_copy = x.clone().to(self.device)
-        x_copy.requires_grad = True
+        x_copy = x.detach().clone().to(self.device)
+        x_copy.requires_grad_(True)
 
         output = self.model(x_copy)
 
@@ -177,7 +177,7 @@ class SaliencyMapGenerator:
         output.backward(gradient=one_hot)
 
         # Multiply gradient by input
-        saliency = (x_copy.grad.data * x_copy).abs().squeeze(1).cpu().numpy()
+        saliency = (x_copy.grad.data * x_copy.data).abs().squeeze(1).cpu().numpy()
 
         return saliency
 
@@ -276,7 +276,7 @@ class SaliencyMapGenerator:
         """
         from captum.attr import DeepLift
 
-        x = x.to(self.device)
+        x = x.detach().to(self.device)
 
         if target_class is None:
             with torch.no_grad():
