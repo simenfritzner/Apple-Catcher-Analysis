@@ -15,7 +15,7 @@ import numpy as np
 import torch
 import torch.nn as nn
 from pathlib import Path
-from scipy.signal import butter, sosfiltfilt, morlet2
+from scipy.signal import butter, fftconvolve, sosfiltfilt
 import matplotlib.pyplot as plt
 import matplotlib.gridspec as gridspec
 
@@ -39,6 +39,12 @@ SALIENCY_BANDS: Dict[str, Tuple[float, float]] = {
 
 # Standard sensorimotor channel names used for contralateral ERD analysis
 SENSORIMOTOR_CHANNELS = ['C3', 'C4', 'Cz', 'FC3', 'FC4']
+
+
+def _morlet2(M: int, s: float, w: float = 5.0) -> np.ndarray:
+    """Complex Morlet wavelet (replaces scipy.signal.morlet2, removed in 1.15)."""
+    x = (np.arange(0, M) - (M - 1.0) / 2) / s
+    return np.exp(1j * w * x) * np.exp(-0.5 * x**2) * np.pi**(-0.25)
 
 
 def _bandpass_filter(
@@ -138,7 +144,7 @@ class ERDERSAnalyzer:
             x_filtered = _bandpass_filter(x_np, low, high, sfreq)
 
             # Reconstruct tensor with channel dim: (N, 1, channels, samples)
-            x_band = torch.tensor(x_filtered, dtype=torch.float32).unsqueeze(1)
+            x_band = torch.tensor(x_filtered.copy(), dtype=torch.float32).unsqueeze(1)
 
             # Compute saliency on the filtered input
             saliency_map = saliency_func(x_band)
@@ -208,10 +214,10 @@ class ERDERSAnalyzer:
             # Ensure minimum length for stable wavelet
             wavelet_length = max(wavelet_length, 7)
 
-            wavelet = morlet2(wavelet_length, s, w)
+            wavelet = _morlet2(wavelet_length, s, w)
 
-            # Convolve signal with wavelet (using mode='same' to preserve length)
-            convolved = np.convolve(signal, wavelet, mode='same')
+            # Convolve signal with wavelet (fftconvolve preserves first input length)
+            convolved = fftconvolve(signal, wavelet, mode='same')
             tf_matrix[fi, :] = np.abs(convolved) ** 2
 
         return times, freqs, tf_matrix

@@ -163,7 +163,7 @@ class MRCPAnalyzer:
         # Filter the raw EEG in numpy then re-pack as tensor
         x_np = x.cpu().numpy()  # (N, 1, ch, samples)
         x_filt = self._bandpass_filter(x_np, low_freq, high_freq, sfreq)
-        x_filt_t = torch.tensor(x_filt, dtype=torch.float32)
+        x_filt_t = torch.tensor(x_filt.copy(), dtype=torch.float32)
 
         # Run saliency on the filtered input
         saliency_map = self._get_saliency(x_filt_t, method)
