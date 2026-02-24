@@ -1,0 +1,451 @@
+% chapters/chapter6_discussion.tex
+\chapter{Discussion}
+\label{ch:discussion}
+
+% ============================================================
+% CHAPTER OVERVIEW
+% ============================================================
+% This chapter interprets the results:
+% - What is the dominant source of discriminability?
+% - What does this mean for Apple Catcher deployment?
+% - What does this mean for visual MI-BCI more broadly?
+%
+% TARGET: 10-15 pages total
+%
+% STYLE NOTES:
+% - Now interpret, don't just describe
+% - Connect findings to hypotheses
+% - Discuss implications
+% - Be honest about limitations
+
+
+% ============================================================
+% 6.1 PRIMARY SOURCE OF DISCRIMINABILITY
+% ============================================================
+\section{What Drives Classification in Apple Catcher?}
+\label{sec:discuss_primary}
+
+% TARGET: 4-5 pages
+
+
+% ------------------------------------------------------------
+\subsection{Evaluating the Competing Hypotheses}
+\label{subsec:discuss_hypotheses}
+
+% TARGET: 2-2.5 pages
+%
+% CONTENT:
+%
+% Go through each hypothesis and synthesize the evidence:
+%
+% ARTIFACT HYPOTHESIS:
+% - Summarize evidence for: [list tests that supported]
+% - Summarize evidence against: [list tests that did not support]
+% - Overall assessment: [strong/moderate/weak support]
+%
+% If artifacts play a significant role:
+% - This is concerning for deployment
+% - But not necessarily catastrophic (see Section 6.3)
+% - Discuss what type of artifacts (eye movement? muscle?)
+%
+% ERD HYPOTHESIS:
+% - Summarize evidence for and against
+% - Did ERDS show expected patterns?
+% - Do filters and attributions align with ERDS?
+%
+% If ERD contributes significantly:
+% - This is the "good" outcome
+% - Model learns legitimate MI signal
+% - Validates the paradigm
+%
+% MRCP HYPOTHESIS:
+% - Summarize evidence
+% - Was MRCP present in the data?
+% - Do low-frequency filters and early attribution support MRCP?
+%
+% If MRCP contributes:
+% - Interesting finding about motor preparation
+% - Explains pre-cue superiority
+% - Has implications for paradigm design
+%
+% VISUAL HYPOTHESIS:
+% - Summarize evidence
+% - Was occipital activity present and discriminative?
+%
+% If visual processing contributes:
+% - Model may classify based on visual attention, not MI
+% - Less concerning than artifacts but still problematic
+
+
+% ------------------------------------------------------------
+\subsection{The Most Likely Explanation}
+\label{subsec:discuss_explanation}
+
+% TARGET: 1.5-2 pages
+%
+% CONTENT:
+%
+% Synthesize into a coherent explanation:
+%
+% SCENARIO A: Artifacts Dominate
+% If evidence points primarily to artifacts:
+% - The 78% accuracy is largely or partially invalid
+% - Pre-cue superiority explained by eye tracking
+% - Model would fail for paralyzed patients
+% - Recommendation: artifact rejection or paradigm redesign
+%
+% SCENARIO B: ERD Dominates
+% If evidence points primarily to ERD:
+% - The 78% accuracy reflects legitimate MI classification
+% - Pre-cue ERD may reflect motor preparation
+% - Model should generalize to patients
+% - Recommendation: proceed with deployment
+%
+% SCENARIO C: MRCP Dominates
+% If evidence points primarily to MRCP:
+% - Interesting finding about anticipatory processing
+% - Model learns motor preparation, not sustained imagery
+% - May or may not generalize to patients
+% - Recommendation: investigate further
+%
+% SCENARIO D: Mixed Sources
+% Most likely outcome - multiple contributions:
+% - Estimate relative contributions if possible
+% - E.g., "60% ERD, 25% MRCP, 15% artifact"
+% - Discuss which dominates pre-cue vs post-cue
+%
+% BE HONEST:
+% - If you cannot definitively distinguish, say so
+% - Note what additional data/analysis would be needed
+
+
+% ------------------------------------------------------------
+\subsection{Explaining the Pre-Cue Superiority}
+\label{subsec:discuss_precue}
+
+% TARGET: 1 page
+%
+% CONTENT:
+%
+% The central finding from prior work:
+% - Pre-cue window (-1 to 0s) alone: 70.7%
+% - Post-cue window (0 to 3s) alone: 58.0%
+% - This is counterintuitive for standard MI-BCI
+%
+% Possible explanations given your findings:
+%
+% If artifacts:
+% - Eye movements tracking falling apple
+% - Concentrated in pre-cue period
+% - Explains the pattern well
+%
+% If MRCP:
+% - Motor preparation before cue
+% - Bereitschaftspotential or CNV
+% - Makes sense given paradigm design
+%
+% If ERD with early onset:
+% - Subjects start imagery when they see apple
+% - Don't wait for formal cue
+% - ERD begins early, explaining pre-cue power
+%
+% The interpretation depends heavily on the results you found.
+
+
+% ============================================================
+% 6.2 IMPLICATIONS FOR APPLE CATCHER DEPLOYMENT
+% ============================================================
+\section{Implications for Apple Catcher System}
+\label{sec:discuss_implications_ac}
+
+% TARGET: 3-4 pages
+
+
+% ------------------------------------------------------------
+\subsection{If Artifacts Contribute Significantly}
+\label{subsec:discuss_if_artifacts}
+
+% TARGET: 1-1.5 pages
+%
+% CONTENT:
+%
+% THE CONCERN:
+% - Stroke patients (target users) may not produce same artifacts
+% - Paralysis affects not just motor but also oculomotor control
+% - Model trained on artifacts won't help these patients
+%
+% SEVERITY ASSESSMENT:
+% - If artifacts are primary: system needs fundamental redesign
+% - If artifacts are secondary: mitigation may be sufficient
+%
+% MITIGATION OPTIONS:
+%
+% Option 1: Artifact Rejection
+% - Add EOG channels for monitoring
+% - Reject trials with eye movements
+% - Cost: lose some trials, adds hardware
+%
+% Option 2: Artifact-Aware Training
+% - Include artifact-contaminated and clean trials
+% - Model learns to rely on neural signal
+% - Requires labeled artifact data
+%
+% Option 3: Paradigm Redesign
+% - Make visual cue less attention-grabbing
+% - Central cue instead of lateralized apple
+% - Loses gamification benefit
+%
+% Option 4: Post-Cue Only
+% - Use only post-cue window
+% - Accept lower accuracy (58%)
+% - Avoids artifact-heavy period
+
+
+% ------------------------------------------------------------
+\subsection{If Neural Signal Dominates}
+\label{subsec:discuss_if_neural}
+
+% TARGET: 1-1.5 pages
+%
+% CONTENT:
+%
+% VALIDATION:
+% - The 78% accuracy is scientifically meaningful
+% - Model learns legitimate motor imagery signal
+% - System can proceed to clinical validation
+%
+% NEXT STEPS:
+% - Test on actual stroke patients
+% - Validate generalization
+% - Compare to traditional BCI systems
+%
+% THE PRE-CUE FINDING AS OPPORTUNITY:
+% - If MRCP or early ERD explains pre-cue power
+% - This is actually useful information
+% - Motor preparation signals may be more robust
+% - Could inform future paradigm design
+
+
+% ------------------------------------------------------------
+\subsection{Recommendations for Deployment}
+\label{subsec:discuss_recommendations}
+
+% TARGET: 1 page
+%
+% CONTENT:
+%
+% Concrete recommendations based on findings:
+%
+% If primarily artifacts:
+% 1. Do not deploy without mitigation
+% 2. Add EOG monitoring
+% 3. Consider paradigm redesign
+% 4. Revalidate with artifact-free data
+%
+% If primarily neural:
+% 1. Proceed to patient testing
+% 2. Keep pre-cue window (it works)
+% 3. Monitor for artifact development in patients
+%
+% If mixed:
+% 1. Quantify contributions more precisely
+% 2. Implement artifact monitoring
+% 3. Cautious deployment with tracking
+
+
+% ============================================================
+% 6.3 BROADER IMPLICATIONS FOR VISUAL MI-BCI
+% ============================================================
+\section{Implications for Visual Motor Imagery Paradigms}
+\label{sec:discuss_implications_broad}
+
+% TARGET: 2-3 pages
+
+
+% ------------------------------------------------------------
+\subsection{The Visual Cue Confound Problem}
+\label{subsec:discuss_visual_confound}
+
+% TARGET: 1-1.5 pages
+%
+% CONTENT:
+%
+% GENERALIZABLE LESSON:
+% - Apple Catcher is not unique
+% - Any MI-BCI with visual lateralized cues has this problem
+% - Examples: left/right arrows, spatial targets
+%
+% The issue:
+% - Visual stimulus can create:
+%   * Eye movements (artifact)
+%   * Visual attention shifts (neural but not MI)
+%   * Visual evoked potentials
+% - All of these can be lateralized and class-discriminative
+%
+% RECOMMENDATION FOR FIELD:
+% - Always check for these confounds
+% - Interpretability analysis should be standard
+% - Don't assume high accuracy = legitimate signal
+
+
+% ------------------------------------------------------------
+\subsection{The Need for Interpretability in BCI}
+\label{subsec:discuss_need_interpretability}
+
+% TARGET: 1-1.5 pages
+%
+% CONTENT:
+%
+% THE PROBLEM:
+% - BCI literature often reports accuracy without validation
+% - Deep learning makes this worse (black box)
+% - High accuracy can mask artifact exploitation
+%
+% THE SOLUTION:
+% - Interpretability should be standard practice
+% - Compare learned features to expected neurophysiology
+% - Check for artifact signatures
+%
+% THIS THESIS AS EXAMPLE:
+% - Demonstrates the approach
+% - Shows what questions to ask
+% - Provides methodology template
+
+
+% ============================================================
+% 6.4 LIMITATIONS
+% ============================================================
+\section{Limitations}
+\label{sec:discuss_limitations}
+
+% TARGET: 2-3 pages
+
+
+% ------------------------------------------------------------
+\subsection{Dataset Limitations}
+\label{subsec:discuss_limit_dataset}
+
+% TARGET: 0.5-1 page
+%
+% CONTENT:
+%
+% Single dataset:
+% - All findings specific to Apple Catcher
+% - May not generalize to other MI paradigms
+%
+% Healthy subjects only:
+% - No stroke patients in dataset
+% - Cannot validate clinical relevance
+%
+% Unknown apple timing:
+% - Exact onset of apple falling is undocumented
+% - Limits precision of pre-cue analysis
+%
+% No dedicated EOG channels:
+% - Cannot definitively separate eye artifacts
+% - Frontal channels used as proxy
+
+
+% ------------------------------------------------------------
+\subsection{Methodological Limitations}
+\label{subsec:discuss_limit_methods}
+
+% TARGET: 0.5-1 page
+%
+% CONTENT:
+%
+% Offline analysis:
+% - All analysis done post-hoc
+% - Online behavior may differ
+% - No closed-loop validation
+%
+% Single model:
+% - Analyzed only baseline EEGNet
+% - Fine-tuned/DANN models may differ
+% - Could be explored in future work
+%
+% Attribution method choice:
+% - Used Integrated Gradients
+% - Other methods might give different results
+% - IG has known limitations
+
+
+% ------------------------------------------------------------
+\subsection{Interpretation Limitations}
+\label{subsec:discuss_limit_interpretation}
+
+% TARGET: 0.5-1 page
+%
+% CONTENT:
+%
+% Correlation vs causation:
+% - Attribution shows what's used, not necessarily why
+% - Cannot prove causal mechanism
+%
+% Cannot fully resolve hypotheses:
+% - Some ambiguity likely remains
+% - Multiple sources may contribute
+% - More targeted experiments needed for certainty
+%
+% Alternative explanations:
+% - May have missed relevant hypotheses
+% - Unknown confounds could exist
+
+
+% ============================================================
+% 6.5 FUTURE DIRECTIONS
+% ============================================================
+\section{Future Directions}
+\label{sec:discuss_future}
+
+% TARGET: 1-2 pages
+%
+% CONTENT:
+%
+% IMMEDIATE FOLLOW-UPS:
+%
+% 1. EOG-controlled validation
+%    - Collect new data with EOG channels
+%    - Definitively separate eye artifacts
+%    - Re-run interpretability analysis
+%
+% 2. Patient validation
+%    - Test model on stroke patients
+%    - Compare performance to healthy subjects
+%    - Check if same features are used
+%
+% 3. Paradigm modifications
+%    - Test with non-lateralized cues
+%    - Compare interpretability results
+%    - Isolate visual confound contribution
+%
+% METHODOLOGICAL EXTENSIONS:
+%
+% 4. Analyze other models
+%    - Compare DANN vs fine-tuned vs baseline
+%    - Do different models learn different features?
+%
+% 5. Causal validation
+%    - Ablation studies: remove channels, measure impact
+%    - Frequency band filtering experiments
+%
+% 6. Alternative attribution methods
+%    - Compare IG to SHAP, LRP, GradCAM
+%    - Check for consistency
+
+
+% ============================================================
+% 6.6 CHAPTER SUMMARY
+% ============================================================
+\section{Chapter Summary}
+\label{sec:discuss_summary}
+
+% TARGET: 0.5 page
+%
+% CONTENT:
+%
+% Key takeaways:
+% 1. [Main finding about what drives classification]
+% 2. [Implication for Apple Catcher deployment]
+% 3. [Broader lesson for visual MI-BCI]
+% 4. [Limitations to keep in mind]

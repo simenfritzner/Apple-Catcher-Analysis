@@ -1,0 +1,366 @@
+% chapters/appendix_b.tex
+\chapter{Implementation Details}
+\label{app:implementation}
+
+% ============================================================
+% APPENDIX OVERVIEW
+% ============================================================
+% This appendix contains:
+% - Code snippets for key analyses
+% - Software configuration details
+% - Data processing pipeline
+
+
+% ============================================================
+% B.1 SOFTWARE ENVIRONMENT
+% ============================================================
+\section{Software Environment}
+\label{app:software}
+
+% CONTENT:
+%
+% TABLE: Software versions
+% Package | Version | Purpose
+% Python | 3.X | Base language
+% PyTorch | X.X.X | Deep learning framework
+% MNE | X.X.X | EEG analysis
+% Captum | X.X.X | Attribution methods
+% NumPy | X.X.X | Numerical computing
+% SciPy | X.X.X | Scientific computing
+% Matplotlib | X.X.X | Visualization
+% etc.
+%
+% Requirements.txt or environment.yml equivalent
+
+
+% ============================================================
+% B.2 ERDS COMPUTATION
+% ============================================================
+\section{ERDS Computation Code}
+\label{app:erds_code}
+
+% CONTENT:
+%
+% Key code snippets for ERDS analysis
+% Use listings package for syntax highlighting
+
+\begin{lstlisting}[language=Python, caption={ERDS computation using MNE}, label={lst:erds}]
+import mne
+import numpy as np
+
+def compute_erds(epochs, freqs, baseline, tmin, tmax):
+    """
+    Compute Event-Related Desynchronization/Synchronization.
+    
+    Parameters
+    ----------
+    epochs : mne.Epochs
+        Epoched EEG data
+    freqs : array-like
+        Frequencies of interest
+    baseline : tuple
+        Baseline period (start, end) in seconds
+    tmin, tmax : float
+        Time window for analysis
+    
+    Returns
+    -------
+    erds : array
+        ERDS values (channels x frequencies x times)
+    """
+    # Time-frequency decomposition
+    power = mne.time_frequency.tfr_morlet(
+        epochs, 
+        freqs=freqs,
+        n_cycles=freqs / 2,  # Adaptive cycles
+        return_itc=False,
+        average=True
+    )
+    
+    # Extract baseline power
+    baseline_mask = (power.times >= baseline[0]) & \
+                    (power.times <= baseline[1])
+    baseline_power = power.data[..., baseline_mask].mean(axis=-1, 
+                                                         keepdims=True)
+    
+    # Compute ERDS percentage
+    erds = (baseline_power - power.data) / baseline_power * 100
+    
+    return erds, power.times, freqs
+\end{lstlisting}
+
+
+% ============================================================
+% B.3 FILTER EXTRACTION AND VISUALIZATION
+% ============================================================
+\section{Filter Analysis Code}
+\label{app:filter_code}
+
+\begin{lstlisting}[language=Python, caption={Temporal filter frequency response}, label={lst:temporal_filter}]
+import numpy as np
+import matplotlib.pyplot as plt
+
+def analyze_temporal_filters(model, fs=250):
+    """
+    Extract and analyze temporal filter frequency responses.
+    
+    Parameters
+    ----------
+    model : nn.Module
+        Trained EEGNet model
+    fs : float
+        Sampling frequency in Hz
+    
+    Returns
+    -------
+    freqs : array
+        Frequency axis
+    responses : array
+        Magnitude responses (n_filters x n_freqs)
+    """
+    # Extract temporal conv weights
+    # Adjust layer name based on your implementation
+    weights = model.temporal_conv.weight.detach().cpu().numpy()
+    # Shape: (F1, 1, 1, kernel_length)
+    
+    n_filters = weights.shape[0]
+    kernel_length = weights.shape[-1]
+    
+    # Zero-pad for frequency resolution
+    n_fft = 512
+    
+    responses = []
+    for i in range(n_filters):
+        kernel = weights[i, 0, 0, :]
+        
+        # Compute frequency response
+        freq_response = np.abs(np.fft.rfft(kernel, n=n_fft))
+        responses.append(freq_response)
+    
+    responses = np.array(responses)
+    freqs = np.fft.rfftfreq(n_fft, d=1/fs)
+    
+    return freqs, responses
+
+
+def plot_filter_responses(freqs, responses, fs=250):
+    """Plot frequency responses with band markers."""
+    fig, ax = plt.subplots(figsize=(10, 6))
+    
+    for i, resp in enumerate(responses):
+        ax.plot(freqs, resp / resp.max(), label=f'Filter {i+1}')
+    
+    # Mark frequency bands
+    ax.axvspan(8, 13, alpha=0.2, color='green', label='Mu (8-13 Hz)')
+    ax.axvspan(13, 30, alpha=0.2, color='blue', label='Beta (13-30 Hz)')
+    
+    ax.set_xlabel('Frequency (Hz)')
+    ax.set_ylabel('Normalized Magnitude')
+    ax.set_xlim(0, 40)
+    ax.legend()
+    
+    return fig
+\end{lstlisting}
+
+
+\begin{lstlisting}[language=Python, caption={Spatial filter topography}, label={lst:spatial_filter}]
+import mne
+
+def plot_spatial_filters(model, info, n_filters=16):
+    """
+    Visualize spatial filter weights as topographic maps.
+    
+    Parameters
+    ----------
+    model : nn.Module
+        Trained EEGNet model
+    info : mne.Info
+        MNE info object with electrode positions
+    n_filters : int
+        Number of spatial filters
+    
+    Returns
+    -------
+    fig : Figure
+        Matplotlib figure with topographic maps
+    """
+    # Extract spatial conv weights
+    weights = model.spatial_conv.weight.detach().cpu().numpy()
+    # Shape: (F1*D, 1, n_channels, 1)
+    
+    n_channels = weights.shape[2]
+    
+    # Create grid of topoplots
+    n_rows = 4
+    n_cols = 4
+    fig, axes = plt.subplots(n_rows, n_cols, figsize=(12, 12))
+    
+    for i, ax in enumerate(axes.flat):
+        if i < n_filters:
+            filter_weights = weights[i, 0, :, 0]
+            
+            mne.viz.plot_topomap(
+                filter_weights, 
+                info, 
+                axes=ax,
+                show=False,
+                contours=0
+            )
+            ax.set_title(f'Filter {i+1}')
+        else:
+            ax.axis('off')
+    
+    plt.tight_layout()
+    return fig
+\end{lstlisting}
+
+
+% ============================================================
+% B.4 INTEGRATED GRADIENTS IMPLEMENTATION
+% ============================================================
+\section{Integrated Gradients Code}
+\label{app:ig_code}
+
+\begin{lstlisting}[language=Python, caption={Integrated Gradients analysis}, label={lst:ig}]
+import torch
+from captum.attr import IntegratedGradients
+import numpy as np
+
+def compute_attributions(model, data_loader, device='cuda'):
+    """
+    Compute Integrated Gradients attributions for all samples.
+    
+    Parameters
+    ----------
+    model : nn.Module
+        Trained model (must be in eval mode)
+    data_loader : DataLoader
+        DataLoader with test samples
+    device : str
+        Device to use
+    
+    Returns
+    -------
+    attributions : dict
+        Attributions organized by class
+    """
+    model.eval()
+    model.to(device)
+    
+    ig = IntegratedGradients(model)
+    
+    attributions = {'left': [], 'right': []}
+    
+    for batch_x, batch_y in data_loader:
+        batch_x = batch_x.to(device)
+        batch_x.requires_grad = True
+        
+        # Create baseline (zeros)
+        baseline = torch.zeros_like(batch_x)
+        
+        for i in range(len(batch_x)):
+            x = batch_x[i:i+1]
+            y = batch_y[i].item()
+            
+            # Get prediction
+            with torch.no_grad():
+                pred = model(x).argmax(dim=1).item()
+            
+            # Only analyze correctly classified samples
+            if pred == y:
+                # Compute attribution
+                attr = ig.attribute(
+                    x,
+                    baselines=baseline[i:i+1],
+                    target=pred,
+                    n_steps=100
+                )
+                
+                attr_np = attr.detach().cpu().numpy()
+                
+                # Store by class
+                class_name = 'left' if y == 0 else 'right'
+                attributions[class_name].append(attr_np)
+    
+    # Convert to arrays
+    for key in attributions:
+        attributions[key] = np.concatenate(attributions[key], axis=0)
+    
+    return attributions
+
+
+def aggregate_attributions(attributions, method='mean'):
+    """
+    Aggregate attributions across trials.
+    
+    Parameters
+    ----------
+    attributions : dict
+        Per-trial attributions from compute_attributions
+    method : str
+        'mean' or 'abs_mean'
+    
+    Returns
+    -------
+    aggregated : dict
+        Aggregated attributions per class
+    """
+    aggregated = {}
+    
+    for class_name, attrs in attributions.items():
+        if method == 'mean':
+            aggregated[class_name] = attrs.mean(axis=0)
+        elif method == 'abs_mean':
+            aggregated[class_name] = np.abs(attrs).mean(axis=0)
+    
+    return aggregated
+\end{lstlisting}
+
+
+% ============================================================
+% B.5 ELECTRODE CONFIGURATION
+% ============================================================
+\section{Electrode Configuration}
+\label{app:electrodes}
+
+% CONTENT:
+%
+% TABLE: Full electrode list
+% Electrode | Position (10-10) | Region | ROI Assignment
+%
+% E.g.:
+% Fp1 | Frontal polar left | Frontal | Artifact ROI
+% Fp2 | Frontal polar right | Frontal | Artifact ROI
+% F3 | Frontal left | Frontal | Artifact ROI
+% ...
+% C3 | Central left | Sensorimotor | Sensorimotor ROI
+% C4 | Central right | Sensorimotor | Sensorimotor ROI
+% ...
+% O1 | Occipital left | Occipital | Visual ROI
+% O2 | Occipital right | Occipital | Visual ROI
+%
+% FIGURE: Electrode montage diagram
+
+
+% ============================================================
+% B.6 HYPERPARAMETERS
+% ============================================================
+\section{Model and Analysis Hyperparameters}
+\label{app:hyperparameters}
+
+% CONTENT:
+%
+% TABLE: EEGNet hyperparameters
+% Parameter | Value | Description
+% F1 | 8 | Number of temporal filters
+% D | 2 | Depth multiplier
+% F2 | 16 | Number of separable filters
+% kernel_length | 64 | Temporal kernel size (samples)
+% dropout | 0.3 | Dropout rate
+% ...
+%
+% TABLE: Analysis hyperparameters
+% Parameter | Value | Description
+% IG n_steps | 100 | Integration steps
+% Wavelet n_cycles | freqs/2 | Wavelet cycles
+% ...

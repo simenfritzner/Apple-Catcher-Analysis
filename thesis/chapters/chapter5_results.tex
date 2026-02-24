@@ -1,0 +1,555 @@
+% chapters/chapter5_results.tex
+\chapter{Results}
+\label{ch:results}
+
+% ============================================================
+% CHAPTER OVERVIEW
+% ============================================================
+% Present results organized by research question:
+% - RQ1: What neural/artifactual signatures are present?
+% - RQ2: What features does EEGNet learn?
+% - RQ3: What drives classification decisions?
+%
+% End with hypothesis scoring and correlation analysis
+%
+% TARGET: 15-20 pages total
+%
+% STYLE NOTES:
+% - Present data objectively without interpretation
+% - Save interpretation for Discussion chapter
+% - Use figures and tables extensively
+% - State statistical results precisely (p-values, effect sizes)
+
+
+% ============================================================
+% 5.1 NEUROPHYSIOLOGICAL CHARACTERIZATION (RQ1)
+% ============================================================
+\section{Neurophysiological Characterization of the Dataset}
+\label{sec:results_neuro}
+
+% TARGET: 5-6 pages
+
+
+% ------------------------------------------------------------
+\subsection{Grand Average ERDS}
+\label{subsec:results_grand_erds}
+
+% TARGET: 2-2.5 pages
+%
+% CONTENT:
+%
+% FIGURE: Grand average time-frequency ERDS plot
+% - Channels: C3 and C4 (side by side)
+% - Time: -2s to 3s relative to cue
+% - Frequency: 1-40 Hz
+% - Color: ERDS percentage (blue = ERD, red = ERS)
+% - Mark cue onset (t=0) with vertical line
+%
+% OBSERVATIONS TO REPORT:
+%
+% Mu band (8-13 Hz):
+% - Is ERD present? At what channels?
+% - When does ERD begin? (Before or after cue?)
+% - Is ERD sustained through imagery period?
+% - Is there contralateral lateralization? (C3 for right MI, C4 for left)
+%
+% Beta band (13-30 Hz):
+% - Is ERD present?
+% - Is there post-movement beta rebound (ERS)?
+%
+% Low frequency (<4 Hz):
+% - Any activity? Could indicate MRCP or artifacts
+%
+% Pre-cue vs Post-cue:
+% - Compare ERDS magnitude in [-1, 0]s vs [0, 2]s
+% - Does pre-cue show discriminative activity?
+%
+% STATISTICAL RESULTS:
+% - Cluster-based permutation test: left vs right MI
+% - Report significant time-frequency clusters
+% - Report effect sizes
+%
+% INCLUDE FIGURE:
+% - 2x2 panel: Left MI/C3, Left MI/C4, Right MI/C3, Right MI/C4
+% - Or: Difference map (Left - Right) at C3 and C4
+
+
+% ------------------------------------------------------------
+\subsection{Topographic Distribution}
+\label{subsec:results_topography}
+
+% TARGET: 1.5-2 pages
+%
+% CONTENT:
+%
+% FIGURE: Topographic maps of ERDS
+% - Multiple panels at key time-frequency points:
+%   * Pre-cue (-1.0 to -0.5s), Mu band
+%   * Post-cue (0.5 to 1.0s), Mu band
+%   * Post-cue (0.5 to 1.0s), Beta band
+% - Separate maps for Left MI and Right MI
+%
+% OBSERVATIONS TO REPORT:
+%
+% Spatial distribution:
+% - Is ERD localized to sensorimotor cortex (C3/C4)?
+% - Is there contralateral dominance?
+% - Is there any frontal activity? (artifact concern)
+% - Is there any occipital activity? (visual concern)
+%
+% Pre-cue vs Post-cue:
+% - Does the topography differ?
+% - Is pre-cue activity sensorimotor or elsewhere?
+%
+% INCLUDE FIGURE:
+% - Grid of topographic maps
+% - Clear labeling of time window and frequency band
+
+
+% ------------------------------------------------------------
+\subsection{MRCP Analysis}
+\label{subsec:results_mrcp}
+
+% TARGET: 1-1.5 pages
+%
+% CONTENT:
+%
+% FIGURE: MRCP waveforms
+% - Channels: Cz (central), C3, C4 (lateral)
+% - Time: -2s to 2s relative to cue
+% - Show mean ± SEM across subjects
+% - Separate for Left and Right MI
+%
+% OBSERVATIONS TO REPORT:
+%
+% Presence of MRCP:
+% - Is there a slow negative shift before cue?
+% - What is the amplitude and timing?
+%
+% Lateralization:
+% - Does MRCP differ between left and right MI?
+% - Is there contralateral bias?
+%
+% If MRCP is present:
+% - This supports MRCP hypothesis
+% - Could explain pre-cue window superiority
+%
+% If MRCP is absent:
+% - Pre-cue activity is likely visual or artifact
+%
+% STATISTICAL RESULTS:
+% - Compare pre-cue amplitude between left and right MI
+% - Test if MRCP amplitude differs from zero
+
+
+% ------------------------------------------------------------
+\subsection{Artifact Characterization}
+\label{subsec:results_artifacts}
+
+% TARGET: 1 page
+%
+% CONTENT:
+%
+% FIGURE: Frontal channel activity
+% - Channels: Fp1, Fp2, F7, F8
+% - Time-frequency maps or time series
+%
+% OBSERVATIONS TO REPORT:
+%
+% Frontal activity:
+% - Is there significant activity at frontal sites?
+% - Is frontal activity class-discriminative? (different for left vs right)
+%
+% If lateralized frontal activity present:
+% - Strong indication of eye movement artifacts
+% - Subjects may track falling apple with eyes
+%
+% Time-locked patterns:
+% - Any transients that could indicate eye movements?
+% - When do they occur relative to cue?
+%
+% QUANTITATIVE:
+% - Report t-test comparing Fp1 vs Fp2 between left and right MI
+% - If significant: artifact concern
+
+
+% ============================================================
+% 5.2 LEARNED FILTER ANALYSIS (RQ2)
+% ============================================================
+\section{What EEGNet Learns: Filter Analysis}
+\label{sec:results_filters}
+
+% TARGET: 4-5 pages
+
+
+% ------------------------------------------------------------
+\subsection{Temporal Filter Frequency Responses}
+\label{subsec:results_temporal_filters}
+
+% TARGET: 2-2.5 pages
+%
+% CONTENT:
+%
+% FIGURE: Frequency response of all 8 temporal filters
+% - X-axis: Frequency (Hz), 0-40 Hz
+% - Y-axis: Magnitude (normalized)
+% - 8 subplots or overlaid with different colors
+% - Mark mu (8-13) and beta (13-30) bands
+%
+% OBSERVATIONS TO REPORT:
+%
+% Filter categorization:
+% - Filter 1: Peak at X Hz, category [delta/theta/mu/beta/gamma]
+% - Filter 2: Peak at X Hz, category
+% - ... (for all 8)
+%
+% Distribution summary:
+% - N filters target mu band: [count]
+% - N filters target beta band: [count]
+% - N filters target low frequency (<4 Hz): [count]
+% - N filters are broadband or other: [count]
+%
+% INTERPRETATION SETUP (not interpretation itself):
+% - If majority target mu/beta: consistent with ERD learning
+% - If many target low frequency: consistent with MRCP or artifacts
+%
+% INCLUDE TABLE:
+% - Filter ID | Peak Frequency (Hz) | Category | Bandwidth
+%
+% ADDITIONAL FIGURE:
+% - Heatmap: Filters × Frequency (magnitude as color)
+
+
+% ------------------------------------------------------------
+\subsection{Spatial Filter Topographies}
+\label{subsec:results_spatial_filters}
+
+% TARGET: 2-2.5 pages
+%
+% CONTENT:
+%
+% FIGURE: Topographic maps for all 16 spatial filters
+% - 4×4 grid of topoplots
+% - Color scale: filter weights (red positive, blue negative)
+% - Consistent color scale across all filters
+%
+% OBSERVATIONS TO REPORT:
+%
+% Visual inspection:
+% - Which filters focus on sensorimotor region?
+% - Which filters focus on frontal region?
+% - Which filters focus on occipital region?
+% - Which filters are bilateral vs lateralized?
+%
+% Quantitative metrics:
+% - For each filter, compute:
+%   * Sensorimotor Ratio (SR)
+%   * Frontal Ratio (FR)
+%   * Occipital Ratio (OR)
+%
+% INCLUDE TABLE:
+% - Filter ID | SR | FR | OR | Dominant Region
+%
+% Summary statistics:
+% - Mean SR across filters: X ± Y
+% - Mean FR across filters: X ± Y
+% - Mean OR across filters: X ± Y
+%
+% ADDITIONAL FIGURE:
+% - Bar plot: SR, FR, OR for each filter
+% - Or: Scatter plot of SR vs FR (each point is a filter)
+
+
+% ============================================================
+% 5.3 ATTRIBUTION ANALYSIS (RQ3)
+% ============================================================
+\section{What Drives Classification: Attribution Analysis}
+\label{sec:results_attribution}
+
+% TARGET: 5-6 pages
+
+
+% ------------------------------------------------------------
+\subsection{Temporal Attribution Profile}
+\label{subsec:results_temporal_attribution}
+
+% TARGET: 1.5-2 pages
+%
+% CONTENT:
+%
+% FIGURE: Mean attribution over time
+% - X-axis: Time (-1s to 2s relative to cue)
+% - Y-axis: Mean |attribution| across channels
+% - Separate lines for Left MI and Right MI
+% - Mark cue onset (t=0)
+% - Show confidence bands (SEM)
+%
+% OBSERVATIONS TO REPORT:
+%
+% Temporal distribution:
+% - When is attribution highest?
+% - Pre-cue (-1 to 0s): X% of total attribution
+% - Post-cue (0 to 2s): Y% of total attribution
+%
+% Pre-cue vs Post-cue:
+% - Statistical comparison of attribution magnitude
+% - t-test or paired comparison
+%
+% Peaks and patterns:
+% - Any transient peaks? (could indicate artifacts)
+% - Sustained attribution? (could indicate ERD)
+%
+% INCLUDE TABLE:
+% - Time Window | Mean Attribution | % of Total
+
+
+% ------------------------------------------------------------
+\subsection{Spatial Attribution Topography}
+\label{subsec:results_spatial_attribution}
+
+% TARGET: 2-2.5 pages
+%
+% CONTENT:
+%
+% FIGURE: Topographic maps of attribution
+% - Panel A: Left MI trials - grand average attribution
+% - Panel B: Right MI trials - grand average attribution
+% - Panel C: Difference (Left - Right)
+%
+% OBSERVATIONS TO REPORT:
+%
+% Spatial distribution:
+% - Where is attribution concentrated?
+% - Sensorimotor (C3/C4): X% of attribution
+% - Frontal (Fp1/Fp2): Y% of attribution
+% - Occipital (O1/O2): Z% of attribution
+%
+% Lateralization:
+% - Is Left MI attribution contralateral? (C4 > C3?)
+% - Is Right MI attribution contralateral? (C3 > C4?)
+%
+% STATISTICAL RESULTS:
+% - Paired t-test: C3 vs C4 attribution for each class
+% - Compare sensorimotor vs frontal attribution
+%
+% INCLUDE TABLE:
+% - Region | Left MI Attribution | Right MI Attribution | Difference
+%
+% ADDITIONAL FIGURE:
+% - Bar plot: attribution by region for each class
+
+
+% ------------------------------------------------------------
+\subsection{Time-Resolved Spatial Attribution}
+\label{subsec:results_timeresolved_attribution}
+
+% TARGET: 1-1.5 pages
+%
+% CONTENT:
+%
+% FIGURE: Attribution topography at different time points
+% - Grid: Rows = time windows, Columns = Left MI / Right MI
+% - Time windows: [-1.0,-0.5], [-0.5,0], [0,0.5], [0.5,1.0], [1.0,2.0]
+%
+% OBSERVATIONS TO REPORT:
+%
+% Evolution of spatial pattern:
+% - Does the spatial pattern change over time?
+% - Pre-cue pattern: where is attribution?
+% - Post-cue pattern: does it shift to sensorimotor?
+%
+% This analysis helps distinguish:
+% - MRCP: central, early
+% - Visual: occipital, early
+% - ERD: sensorimotor, sustained
+% - Artifact: frontal, early
+
+
+% ------------------------------------------------------------
+\subsection{Comparison to Neurophysiology}
+\label{subsec:results_attribution_vs_neuro}
+
+% TARGET: 1 page
+%
+% CONTENT:
+%
+% FIGURE: Side-by-side comparison
+% - Panel A: ERDS topography (from Section 5.1)
+% - Panel B: Attribution topography (from above)
+% - Panel C: Spatial correlation plot
+%
+% QUANTITATIVE COMPARISON:
+%
+% Spatial correlation:
+% - Correlation between ERDS topography and attribution topography
+% - r = [value], p = [value]
+%
+% Interpretation:
+% - High correlation: model uses neurophysiological features
+% - Low correlation: model may use other features
+%
+% Channel-by-channel:
+% - Scatter plot: ERDS magnitude vs attribution per channel
+% - Report correlation
+
+
+% ============================================================
+% 5.4 HYPOTHESIS SCORING
+% ============================================================
+\section{Evidence Summary: Scoring the Hypotheses}
+\label{sec:results_hypothesis_scoring}
+
+% TARGET: 2-3 pages
+
+
+% ------------------------------------------------------------
+\subsection{Summary of Evidence}
+\label{subsec:results_evidence_summary}
+
+% TARGET: 1.5-2 pages
+%
+% CONTENT:
+%
+% Compile evidence from all previous sections:
+%
+% INCLUDE TABLE: Hypothesis Scoring Matrix
+%
+% Rows (Tests):
+% - T1: Mu/Beta ERDS at C3/C4
+% - T2: MRCP at Cz
+% - T3: Frontal activity (artifact marker)
+% - T4: Occipital activity (visual marker)
+% - T5: Temporal filters target mu/beta
+% - T6: Temporal filters target low frequency
+% - T7: Spatial filters focus on sensorimotor
+% - T8: Spatial filters focus on frontal
+% - T9: Attribution at sensorimotor
+% - T10: Attribution at frontal
+% - T11: Attribution at occipital
+% - T12: Attribution highest pre-cue
+% - T13: Attribution highest post-cue
+%
+% Columns: Artifact | ERD | MRCP | Visual
+%
+% Cells: ++, +, 0, -, --
+%
+% SCORING LOGIC (briefly explain):
+% - T1 ERDS present → supports ERD, against artifact
+% - T3 frontal activity → supports artifact
+% - etc.
+
+
+% ------------------------------------------------------------
+\subsection{Hypothesis Adjudication}
+\label{subsec:results_adjudication}
+
+% TARGET: 0.5-1 page
+%
+% CONTENT:
+%
+% Count the evidence:
+% - Artifact hypothesis: N tests support, M tests against
+% - ERD hypothesis: N tests support, M tests against
+% - MRCP hypothesis: N tests support, M tests against
+% - Visual hypothesis: N tests support, M tests against
+%
+% Dominant hypothesis:
+% - Which hypothesis has the most support?
+% - Is it clearly dominant or is evidence mixed?
+%
+% NOTE: This is still descriptive. Leave interpretation for Discussion.
+
+
+% ============================================================
+% 5.5 CORRELATION ANALYSIS
+% ============================================================
+\section{Neural-Performance Correlations}
+\label{sec:results_correlations}
+
+% TARGET: 2-3 pages
+
+
+% ------------------------------------------------------------
+\subsection{ERD Magnitude vs Classification Accuracy}
+\label{subsec:results_erd_accuracy}
+
+% TARGET: 1-1.5 pages
+%
+% CONTENT:
+%
+% FIGURE: Scatter plot
+% - X-axis: Mean ERDS magnitude (mu band, C3/C4) per subject
+% - Y-axis: Classification accuracy per subject
+% - Each point is one subject (N=40)
+% - Add regression line
+%
+% STATISTICAL RESULTS:
+% - Pearson r = [value], p = [value]
+% - Or Spearman if non-normal
+% - 95% CI for correlation
+%
+% OBSERVATIONS:
+% - Is there a significant correlation?
+% - If yes: subjects with stronger ERD classified better
+% - If no: classification may not rely primarily on ERD
+
+
+% ------------------------------------------------------------
+\subsection{Spatial Alignment vs Accuracy}
+\label{subsec:results_alignment_accuracy}
+
+% TARGET: 1 page
+%
+% CONTENT:
+%
+% FIGURE: Scatter plot
+% - X-axis: Spatial correlation (attribution vs ERDS) per subject
+% - Y-axis: Classification accuracy per subject
+%
+% STATISTICAL RESULTS:
+% - Correlation coefficient and p-value
+%
+% OBSERVATIONS:
+% - Does alignment predict performance?
+
+
+% ------------------------------------------------------------
+\subsection{Characterizing BCI Inefficiency}
+\label{subsec:results_bci_inefficiency}
+
+% TARGET: 0.5-1 page
+%
+% CONTENT:
+%
+% Identify poor performers:
+% - Subjects with accuracy < 60% (or other threshold)
+% - N = [count] subjects
+%
+% Compare to good performers:
+% - ERDS magnitude: t-test
+% - Frontal activity: t-test
+% - Other metrics
+%
+% OBSERVATIONS:
+% - What characterizes poor performers?
+% - Weaker ERD? More artifacts? Different spatial pattern?
+
+
+% ============================================================
+% 5.6 CHAPTER SUMMARY
+% ============================================================
+\section{Results Summary}
+\label{sec:results_summary}
+
+% TARGET: 0.5 page
+%
+% CONTENT:
+%
+% Bullet-point summary of main findings:
+% - RQ1: [1-2 sentence summary]
+% - RQ2: [1-2 sentence summary]
+% - RQ3: [1-2 sentence summary]
+% - Dominant hypothesis: [state which]
+% - Correlation findings: [brief]
+%
+% Note: Full interpretation in Discussion chapter

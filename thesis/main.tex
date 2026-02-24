@@ -1,0 +1,79 @@
+% main.tex - Master Thesis
+% Interpreting EEGNet Classification in Visual Motor Imagery BCI
+\documentclass[12pt, a4paper, twoside]{report}
+
+% ============================================================
+% PACKAGES
+% ============================================================
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[english]{babel}
+\usepackage{graphicx}
+\usepackage{amsmath, amssymb}
+\usepackage{booktabs}
+\usepackage{multirow}
+\usepackage{hyperref}
+\usepackage{cleveref}
+\usepackage{subcaption}
+\usepackage[style=numeric, sorting=none]{biblatex}
+\usepackage{geometry}
+\usepackage{setspace}
+\usepackage{fancyhdr}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{algorithm}
+\usepackage{algpseudocode}
+
+% ============================================================
+% DOCUMENT SETTINGS
+% ============================================================
+\geometry{margin=2.5cm}
+\onehalfspacing
+\addbibresource{references.bib}
+
+% ============================================================
+% TITLE INFORMATION
+% ============================================================
+\title{Interpreting Deep Learning Classification in Visual Motor Imagery BCI: \\
+       A Forensic Analysis of the Apple Catcher Paradigm}
+\author{Simen Fritzner}
+\date{June 2026}
+
+% ============================================================
+% DOCUMENT START
+% ============================================================
+\begin{document}
+
+% ------------------------------------------------------------
+% FRONT MATTER
+% ------------------------------------------------------------
+\maketitle
+
+\input{chapters/abstract}
+\input{chapters/acknowledgments}
+
+\tableofcontents
+\listoffigures
+\listoftables
+
+% ------------------------------------------------------------
+% MAIN CHAPTERS
+% ------------------------------------------------------------
+\input{chapters/chapter1_introduction}
+\input{chapters/chapter2_background}
+\input{chapters/chapter3_related_work}
+\input{chapters/chapter4_methods}
+\input{chapters/chapter5_results}
+\input{chapters/chapter6_discussion}
+\input{chapters/chapter7_conclusion}
+
+% ------------------------------------------------------------
+% BACK MATTER
+% ------------------------------------------------------------
+\printbibliography[heading=bibintoc]
+
+\appendix
+\input{chapters/appendix_a}
+\input{chapters/appendix_b}
+
+\end{document}
