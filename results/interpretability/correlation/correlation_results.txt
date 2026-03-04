@@ -1,0 +1,24 @@
+Correlation Analysis Results
+============================================================
+
+C3 mu-ERD (%) vs Accuracy:
+  Pearson r = -0.2453, p = 0.127034
+  NOT significant (p > 0.05)
+
+C4 mu-ERD (%) vs Accuracy:
+  Pearson r = 0.1638, p = 0.312438
+  NOT significant (p > 0.05)
+
+Mean C3/C4 mu-ERD (%) vs Accuracy:
+  Pearson r = 0.0054, p = 0.973829
+  NOT significant (p > 0.05)
+
+BCI Inefficiency Analysis
+----------------------------------------
+Low performers (acc < 0.70):  N=7
+High performers (acc > 0.80): N=13
+Low performers mean ERD:  -8.93% ± 9.54
+High performers mean ERD: -11.47% ± 27.76
+t-test: t=-0.223, p=0.825996
+Cohen's d: -0.109
+Interpretation: ERD does NOT predict performance
