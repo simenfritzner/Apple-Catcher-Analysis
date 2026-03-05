@@ -1,0 +1,7 @@
+Phase 5.4 — Lateralized Readiness Potential
+==================================================
+
+Classical LRP |amp| pre-cue:  0.909413
+Classical LRP |amp| post-cue: 0.895898
+Model lat. sal |amp| pre-cue:  0.000260
+Model lat. sal |amp| post-cue: 0.000452

@@ -1,0 +1,8 @@
+Frequency-Band Saliency Ranking
+========================================
+
+delta: 0.000572
+theta: 0.000482
+mu: 0.000478
+beta: 0.000415
+gamma: 0.000202

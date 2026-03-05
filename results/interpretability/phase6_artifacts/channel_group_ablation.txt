@@ -1,0 +1,8 @@
+baseline_accuracy: 0.67
+
+baseline: {'accuracy': 0.67, 'accuracy_drop': 0.0, 'n_channels': 0.0}
+frontal: {'accuracy': 0.655, 'accuracy_drop': 0.015000000000000013, 'n_channels': 6.0}
+central: {'accuracy': 0.605, 'accuracy_drop': 0.06500000000000006, 'n_channels': 14.0}
+parietal: {'accuracy': 0.615, 'accuracy_drop': 0.05500000000000005, 'n_channels': 12.0}
+occipital: {'accuracy': 0.67, 'accuracy_drop': 0.0, 'n_channels': 0.0}
+temporal: {'accuracy': 0.67, 'accuracy_drop': 0.0, 'n_channels': 0.0}

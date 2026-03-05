@@ -1,0 +1,8 @@
+Per-Method Pre/Post-Cue Importance
+=======================================================
+
+                Method     Pre-Cue    Post-Cue     Ratio
+               vanilla    0.000277    0.000335     0.826
+  integrated_gradients    0.001178    0.001165     1.010
+      gradient_x_input    0.001058    0.001269     0.833
+              deeplift    0.001346    0.001329     1.013

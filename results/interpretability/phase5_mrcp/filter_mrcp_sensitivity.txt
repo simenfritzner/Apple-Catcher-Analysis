@@ -1,0 +1,13 @@
+Phase 5.2 — Temporal Filter MRCP Sensitivity
+==================================================
+
+MRCP-sensitive filters: 5/8
+
+Filter 1: low_freq_ratio=0.1330, peak_freq=42.97 Hz, mrcp_sensitive=False
+Filter 2: low_freq_ratio=0.6520, peak_freq=0.00 Hz, mrcp_sensitive=True
+Filter 3: low_freq_ratio=0.8062, peak_freq=0.00 Hz, mrcp_sensitive=True
+Filter 4: low_freq_ratio=0.0006, peak_freq=11.72 Hz, mrcp_sensitive=False
+Filter 5: low_freq_ratio=0.7069, peak_freq=0.00 Hz, mrcp_sensitive=True
+Filter 6: low_freq_ratio=0.8073, peak_freq=0.00 Hz, mrcp_sensitive=True
+Filter 7: low_freq_ratio=0.1185, peak_freq=11.72 Hz, mrcp_sensitive=False
+Filter 8: low_freq_ratio=0.7375, peak_freq=0.00 Hz, mrcp_sensitive=True

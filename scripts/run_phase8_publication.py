@@ -43,7 +43,7 @@ CUE_ONSET = 0.0
 CUE_IDX = int((CUE_ONSET - TMIN) * SFREQ)  # 250
 N_CHANNELS = 32
 N_CLASSES = 2
-SUBJECTS_TO_LOAD = ["s01", "s02", "s03", "s04", "s05"]
+SUBJECTS_TO_LOAD = [f"s{i:02d}" for i in range(1, 41)]  # All 40 subjects
 
 
 # ── Data & model loading (same pattern as run_analysis.py) ─────────────────

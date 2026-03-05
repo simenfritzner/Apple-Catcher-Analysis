@@ -1,0 +1,7 @@
+pre_cue_importance: 0.001346
+post_cue_importance: 0.001329
+importance_ratio: 1.013334
+pre_cue_accuracy_drop: -0.080000
+post_cue_accuracy_drop: 0.245000
+accuracy_drop_ratio: -0.326531
+baseline_accuracy: 0.670000

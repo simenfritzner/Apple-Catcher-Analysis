@@ -1,0 +1,6 @@
+Phase 5.1 — Low-Frequency Saliency (0.1-5 Hz)
+==================================================
+
+pre_cue_importance:  0.001068
+post_cue_importance: 0.000718
+pre_post_ratio:      1.487314

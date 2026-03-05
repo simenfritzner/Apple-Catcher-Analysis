@@ -1,0 +1,13 @@
+Time-Frequency Saliency Summary
+========================================
+
+Peak frequency: 1.0 Hz
+Frequency range: 1.0 - 45.0 Hz
+TF matrix shape: (40, 750)
+
+Frequency-averaged power (top 5 bins):
+  1.0 Hz: 0.000211
+  2.1 Hz: 0.000020
+  3.3 Hz: 0.000005
+  4.4 Hz: 0.000002
+  5.5 Hz: 0.000001

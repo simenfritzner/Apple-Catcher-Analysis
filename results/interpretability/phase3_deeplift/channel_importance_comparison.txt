@@ -1,0 +1,10 @@
+Channel Importance Comparison Across Methods
+=======================================================
+
+IG vs DeepLIFT channel importance:
+  Pearson r  = 0.9999 (p = 9.18e-58)
+  Spearman ρ = 0.9989 (p = 1.96e-41)
+  Top-5 overlap: 5/5 channels
+  IG top-5:      ['CP3', 'FC5', 'C4', 'C6', 'FC6']
+  DeepLIFT top-5: ['CP3', 'FC5', 'C4', 'C6', 'FC6']
+  Shared:         ['CP3', 'FC5', 'C4', 'C6', 'FC6']
