@@ -1,0 +1,336 @@
+% chapters/chapter3_related_work.tex
+\chapter{Related Work}
+\label{ch:related_work}
+
+This chapter reviews prior research relevant to the interpretability analysis conducted in this thesis. Rather than providing a comprehensive survey of motor imagery BCI—which would duplicate extensive existing reviews \cite{lotte2018review}—I focus specifically on three areas: interpretability methods applied to EEG-based deep learning, validation of learned features against neurophysiology, and the handling of artifacts in MI-BCI systems. I conclude by identifying gaps in the literature that this thesis addresses.
+
+
+% ============================================================
+% 3.1 DEEP LEARNING FOR EEG CLASSIFICATION
+% ============================================================
+\section{Deep Learning for EEG Classification}
+\label{sec:rw_deep_learning}
+
+The application of deep learning to EEG classification has grown rapidly since 2015, driven by the success of convolutional neural networks in computer vision and the promise of end-to-end learning without manual feature engineering.
+
+
+% ------------------------------------------------------------
+\subsection{Convolutional Neural Networks for EEG}
+\label{subsec:rw_cnns}
+
+Schirrmeister et al. \cite{schirrmeister2017deep} introduced two influential architectures for EEG decoding: Deep ConvNet, a relatively deep network with multiple convolutional layers, and Shallow ConvNet, a simpler architecture designed to mimic traditional filterbank approaches. Evaluated on the BCI Competition IV dataset 2a (4-class motor imagery), both networks achieved performance competitive with or exceeding traditional CSP-based methods.
+
+Critically, Schirrmeister et al. demonstrated that the learned filters resembled bandpass filters tuned to physiologically relevant frequency bands. This was among the first demonstrations that EEG-trained CNNs learn interpretable features rather than arbitrary nonlinear transformations. However, their analysis was limited to within-subject models and did not systematically compare learned features to ground-truth neurophysiology.
+
+Lawhern et al. \cite{lawhern2018eegnet} introduced EEGNet, the architecture used in this thesis. EEGNet's compact design—using depthwise separable convolutions to reduce parameters—made it suitable for the limited data typical of BCI applications. The authors validated EEGNet across multiple paradigms (motor imagery, P300, error-related potentials) and demonstrated competitive performance with far fewer parameters than previous architectures.
+
+The original EEGNet paper included brief filter visualizations showing that temporal filters captured relevant frequency content. However, the interpretability analysis was not the paper's focus, and several questions remained unaddressed: Do the learned spatial filters focus on appropriate brain regions? What features actually drive classification decisions (as opposed to what features are extracted)? How do these findings change for cross-subject models?
+
+
+% ------------------------------------------------------------
+\subsection{Cross-Subject and Transfer Learning Approaches}
+\label{subsec:rw_transfer}
+
+A persistent challenge in MI-BCI is inter-subject variability. Models trained on one subject often perform poorly on others due to differences in brain anatomy, electrode placement, and cognitive strategy \cite{wu2020transfer}.
+
+Transfer learning approaches attempt to leverage data from multiple source subjects to improve performance on new target subjects. Strategies include:
+
+\begin{itemize}
+    \item \textbf{Pooled training:} Training a single model on data from all available subjects, hoping it learns subject-invariant features
+    \item \textbf{Fine-tuning:} Pre-training on source subjects and adapting to target subjects with limited calibration data
+    \item \textbf{Domain adaptation:} Explicitly aligning feature distributions between source and target domains, often using adversarial training \cite{ganin2016domain}
+\end{itemize}
+
+Ozdenizci et al. \cite{ozdenizci2020learning} applied domain-adversarial neural networks (DANN) to motor imagery EEG, demonstrating that adversarial alignment could improve cross-subject generalization. However, interpretability was not examined—it remains unclear whether domain-adapted models learn different features than non-adapted models, or whether adaptation merely rescales existing representations.
+
+My prior work \cite{fritzner2025specialization} compared transfer learning strategies on the Apple Catcher dataset, finding that supervised fine-tuning and DANN achieved similar accuracy (~78\%). The present thesis extends this work by examining what features the trained model actually learned, regardless of which training strategy was used.
+
+
+% ============================================================
+% 3.2 INTERPRETABILITY IN EEG DEEP LEARNING
+% ============================================================
+\section{Interpretability in EEG-Based Deep Learning}
+\label{sec:rw_interpretability}
+
+As deep learning has become prevalent in EEG analysis, researchers have increasingly recognized the need to understand what these models learn. Interpretability serves both scientific goals (understanding neural representations) and practical goals (validating that models learn legitimate features).
+
+
+% ------------------------------------------------------------
+\subsection{Filter Visualization}
+\label{subsec:rw_filter_viz}
+
+The most straightforward interpretability approach is visualizing learned convolutional filters. For EEG, temporal filters can be analyzed as frequency responses, and spatial filters can be visualized as topographic maps.
+
+Schirrmeister et al. \cite{schirrmeister2017deep} pioneered this approach, showing that their networks learned filters resembling bandpass filters in the mu and beta ranges. They also visualized spatial filters, finding patterns consistent with sensorimotor localization. This work established that CNN-based EEG classifiers can learn neurophysiologically plausible features.
+
+Dose et al. \cite{dose2018cnn} conducted a more systematic filter analysis for motor imagery classification. They computed correlations between learned filter responses and traditional band power features, finding strong correspondence in the mu and beta bands. Spatial filters showed focus on central electrodes, consistent with sensorimotor activity. However, the analysis was limited to within-subject models trained on a single dataset.
+
+Collapsed across the literature, filter visualization studies generally find that well-performing models learn filters tuned to expected frequency bands (mu, beta) with spatial focus on sensorimotor regions. However, several limitations are apparent:
+
+\begin{enumerate}
+    \item Most studies examine within-subject models; cross-subject models may learn different features
+    \item Filter visualization shows what the network \textit{can} extract, not what it \textit{uses}
+    \item Few studies systematically compare filter characteristics to independently-measured neurophysiology
+    \item Artifact-focused filters are rarely examined or reported
+\end{enumerate}
+
+
+% ------------------------------------------------------------
+\subsection{Attribution Methods}
+\label{subsec:rw_attribution}
+
+Attribution methods go beyond filter visualization by identifying which input features influence specific classification decisions. Several approaches have been applied to EEG.
+
+\subsubsection{Layer-wise Relevance Propagation}
+
+Sturm et al. \cite{sturm2016lrp} applied Layer-wise Relevance Propagation (LRP) to EEG classification, producing "relevance maps" showing which time points and channels contributed to each decision. For motor imagery, relevance was concentrated over sensorimotor regions during the imagery period, consistent with ERD-based classification. This was an important early demonstration that attribution methods could validate EEG classifiers.
+
+However, LRP has known limitations: it can produce different results depending on implementation details, and it lacks the axiomatic foundations of methods like Integrated Gradients.
+
+\subsubsection{Integrated Gradients}
+
+Integrated Gradients (IG) \cite{sundararajan2017axiomatic} has gained popularity due to its theoretical foundations (satisfying sensitivity and implementation invariance axioms) and ease of implementation. Several studies have applied IG to EEG:
+
+Bang et al. \cite{bang2021spatio} compared multiple attribution methods for EEG emotion classification, finding that IG produced more stable and interpretable results than gradient-based alternatives. They recommended IG as a default choice for EEG interpretability.
+
+Nagarajan et al. applied IG to sleep staging models, validating that attributions aligned with known sleep neurophysiology (e.g., delta activity in deep sleep, alpha in drowsiness). This demonstrated that IG can successfully validate EEG classifiers against independent neurophysiological knowledge.
+
+For motor imagery specifically, IG has been used less extensively. Most MI interpretability studies predate IG's widespread adoption or use older methods like saliency maps. This thesis applies IG to MI classification, filling a gap in the literature.
+
+\subsubsection{Limitations and Criticisms}
+
+Attribution methods have faced criticism. Adebayo et al. \cite{adebayo2018sanity} showed that some attribution methods produce similar outputs for trained and untrained (random) networks, questioning their validity. They proposed "sanity checks" that attributions should pass.
+
+For EEG, these concerns are partially mitigated by the ability to compare attributions against known neurophysiology. If attributions highlight sensorimotor regions during motor imagery—and this pattern disappears for random networks—we have evidence that the attribution reflects learned features rather than input statistics.
+
+
+% ------------------------------------------------------------
+\subsection{Comparison to Neurophysiology}
+\label{subsec:rw_neuro_comparison}
+
+A critical validation step is comparing model-derived features (filters, attributions) to independently-measured neurophysiology. Surprisingly few studies do this systematically.
+
+Schirrmeister et al. \cite{schirrmeister2017deep} qualitatively compared learned filters to expected frequency bands but did not quantitatively correlate filter responses with measured ERD. Dose et al. \cite{dose2018cnn} computed correlations between filter outputs and band power, finding strong correspondence, but did not examine spatial alignment with ERD topography.
+
+The most rigorous validation approach would:
+
+\begin{enumerate}
+    \item Compute ground-truth neurophysiology (ERDS maps) independently of the model
+    \item Extract model-derived features (filter responses, attributions)
+    \item Quantitatively compare spatial and temporal patterns
+    \item Test whether alignment predicts classification performance
+\end{enumerate}
+
+This thesis implements this approach, filling a methodological gap in the literature.
+
+
+% ============================================================
+% 3.3 ARTIFACTS AND CONFOUNDS IN MI-BCI
+% ============================================================
+\section{Artifacts and Confounds in Motor Imagery BCI}
+\label{sec:rw_artifacts}
+
+A recurring concern in BCI research is that classifiers may learn artifacts rather than neural signals. This section reviews evidence for artifact contamination and methods for detection and mitigation.
+
+
+% ------------------------------------------------------------
+\subsection{Evidence for Artifact-Driven Classification}
+\label{subsec:rw_artifact_evidence}
+
+Several studies have demonstrated that BCI classifiers can exploit artifacts:
+
+Fatourechi et al. \cite{fatourechi2007emg} showed that EMG contamination in EEG can inflate motor imagery classification accuracy. When EMG artifacts were removed, accuracy dropped substantially for some subjects. This demonstrated that reported MI-BCI performance may overestimate true neural decoding ability.
+
+Amin et al. \cite{amin2019deep} found that deep learning models trained on EEG could learn eye movement artifacts. When they artificially removed eye-related components using ICA, classification accuracy decreased, indicating that the original models had partially relied on ocular signals.
+
+Krusienski and Schalk \cite{krusienski2011eye} examined eye movement contamination in P300 BCI, finding that lateral eye movements toward targets could produce above-chance classification even without neural P300 signals. While this study focused on P300 rather than motor imagery, it illustrates how visual paradigms can introduce eye movement confounds.
+
+These findings motivate the artifact analysis in this thesis. The Apple Catcher paradigm's lateralized visual stimulus (falling apple) creates conditions favorable for eye movement artifacts, and the high pre-cue discriminability raises concerns about artifact contamination.
+
+
+% ------------------------------------------------------------
+\subsection{Artifact Detection and Rejection}
+\label{subsec:rw_artifact_rejection}
+
+Traditional approaches to artifact handling include:
+
+\textbf{Threshold-based rejection:} Trials with amplitude exceeding a threshold (e.g., 100 µV) are excluded. Simple but discards potentially valid data and does not address subtle contamination.
+
+\textbf{ICA-based removal:} Independent Component Analysis decomposes EEG into source components, allowing identification and removal of artifact sources. Effective but requires expertise to identify artifact components and risks removing neural signal.
+
+\textbf{Regression-based removal:} EOG or EMG reference signals are regressed out of EEG channels. Requires dedicated reference channels that may not be available.
+
+For the Apple Catcher dataset, no artifact rejection was performed during data collection or model training. This is both a limitation (artifacts may contaminate results) and an opportunity (we can analyze what artifacts exist and whether the model uses them).
+
+
+% ------------------------------------------------------------
+\subsection{Artifact-Aware Interpretability}
+\label{subsec:rw_artifact_aware}
+
+Few studies explicitly examine whether trained models use artifacts. Most interpretability work implicitly assumes models learn neural features and interprets results accordingly.
+
+Bethge et al. \cite{bethge2022eeg} conducted one of the few systematic analyses of artifact sensitivity in EEG deep learning. They found that some models showed high attribution on frontal channels, suggesting possible eye movement sensitivity. However, they did not have ground-truth labels for artifact presence and could not definitively distinguish artifact from neural signals.
+
+The approach in this thesis—framing artifact detection as hypothesis testing with specific predictions—provides a more rigorous framework. By examining spatial distribution (frontal vs. sensorimotor), temporal profile (stimulus-locked vs. sustained), and frequency content (broadband vs. mu/beta), we can assess artifact contribution even without explicit artifact labels.
+
+
+% ============================================================
+% 3.4 VISUAL CUE EFFECTS IN MI-BCI
+% ============================================================
+\section{Visual Paradigm Effects}
+\label{sec:rw_visual}
+
+Most MI-BCI systems use visual cues to instruct subjects which movement to imagine. These visual stimuli can introduce confounds beyond artifacts.
+
+
+% ------------------------------------------------------------
+\subsection{Visual Cue Presentation}
+\label{subsec:rw_visual_cues}
+
+Standard MI paradigms present lateralized cues—left or right arrows, spatial targets, or animated stimuli. These cues are processed by the visual system before motor imagery begins, potentially contributing class-discriminative information unrelated to motor processes.
+
+McFarland et al. \cite{mcfarland2000spatial} examined the effects of spatial attention in MI-BCI, finding that attending to left vs. right visual fields produced lateralized EEG patterns even without motor imagery. This suggests that visual attention alone can drive classification, independent of motor processes.
+
+For paradigms with extended visual stimuli—such as Apple Catcher, where the apple falls for several seconds—the visual contribution may be larger than for brief cue presentations. Subjects may track the falling object with their eyes, shift spatial attention, or generate visual predictions about trajectory, all producing lateralized neural activity.
+
+
+% ------------------------------------------------------------
+\subsection{Visual Evoked Potentials}
+\label{subsec:rw_veps}
+
+Visual evoked potentials (VEPs) are stereotyped neural responses to visual stimuli, strongest over occipital cortex. While VEPs are typically thought to be class-invariant (responding to any visual stimulus), lateralized stimuli can produce lateralized VEPs.
+
+In the Apple Catcher paradigm, the apple appears on either the left or right side of the screen. This lateralized stimulus could produce different VEP patterns for left vs. right trials, contributing to classification. The temporal profile would be early (within 200ms of stimulus onset) and occipitally localized.
+
+
+% ------------------------------------------------------------
+\subsection{Distinguishing Motor Imagery from Visual Processing}
+\label{subsec:rw_distinguishing}
+
+A fundamental challenge is distinguishing motor imagery signals from visual processing. Both are present in typical MI-BCI paradigms, and both can be lateralized. Possible approaches include:
+
+\begin{itemize}
+    \item \textbf{Temporal separation:} ERD develops later (300-500ms post-cue) than VEPs (50-200ms). Analyzing later time windows may isolate motor signals.
+    
+    \item \textbf{Spatial separation:} Motor imagery produces activity over sensorimotor cortex (C3/C4); visual processing produces activity over occipital cortex (O1/O2). Examining spatial attribution can distinguish these.
+    
+    \item \textbf{Frequency separation:} ERD is band-limited (mu, beta); VEPs include transient components across multiple frequencies.
+\end{itemize}
+
+The interpretability analysis in this thesis uses all three approaches to assess the relative contributions of motor and visual processes.
+
+
+% ============================================================
+% 3.5 TEMPORAL WINDOW SELECTION
+% ============================================================
+\section{Temporal Window Selection in MI-BCI}
+\label{sec:rw_temporal}
+
+The choice of temporal window—which portion of the trial to use for classification—affects both performance and interpretation. Surprisingly little systematic research exists on this topic.
+
+
+% ------------------------------------------------------------
+\subsection{Standard Practice}
+\label{subsec:rw_standard_windows}
+
+Most MI-BCI studies use post-cue windows, typically beginning at cue onset (t=0) or slightly after, and extending 2-4 seconds into the imagery period. The rationale is that this window captures sustained ERD during active imagery.
+
+The BCI Competition datasets, which serve as benchmarks for much MI research, provide pre-defined analysis windows. For BCI Competition IV dataset 2a, the standard window is 0.5s to 2.5s post-cue. Most studies adopt this convention without examining alternatives.
+
+
+% ------------------------------------------------------------
+\subsection{Pre-Cue Activity}
+\label{subsec:rw_precue}
+
+Pre-cue activity is typically treated as baseline and excluded from classification. However, several studies suggest that pre-cue periods may contain discriminative information:
+
+Libet et al.'s classic work on readiness potentials \cite{libet1983time} demonstrated that motor preparation begins before conscious awareness of intention. In cued paradigms, if subjects anticipate the cue, preparatory activity may begin before the formal cue marker.
+
+Garipelli et al. \cite{garipelli2013single} showed that anticipatory slow cortical potentials before movement cues could be detected in single trials, suggesting that pre-cue activity carries information about upcoming motor plans.
+
+For the Apple Catcher paradigm, the visual cue (falling apple) precedes the formal event marker, explicitly providing information before t=0. This makes pre-cue activity not merely anticipatory noise but potentially task-relevant signal—or artifact.
+
+
+% ------------------------------------------------------------
+\subsection{Window Optimization}
+\label{subsec:rw_window_optimization}
+
+Few studies systematically optimize temporal windows. Miladinović et al. \cite{miladinovic2024optimizing} found that longer windows improved MI classification accuracy, but they did not shift window position relative to the cue. The interaction between window position and classification performance remains underexplored.
+
+The finding from my prior work \cite{fritzner2025specialization}—that pre-cue windows outperform post-cue windows in Apple Catcher—is unusual in the literature. It suggests either that the paradigm captures unusually strong preparatory signals, or that confounds dominate the pre-cue period. Distinguishing these possibilities is a primary goal of this thesis.
+
+
+% ============================================================
+% 3.6 SUMMARY AND GAPS
+% ============================================================
+\section{Summary and Research Gaps}
+\label{sec:rw_summary}
+
+This review has identified several gaps in the existing literature:
+
+\begin{enumerate}
+    \item \textbf{Limited interpretability of cross-subject models:} Most filter visualization and attribution studies examine within-subject models. Cross-subject models, which pool data across individuals, may learn different features. The Apple Catcher model was trained on 39 subjects; its learned features may differ from within-subject findings.
+    
+    \item \textbf{Insufficient attention to visual paradigm confounds:} While artifact contamination is acknowledged, few studies specifically examine how visual cue design affects classification. The Apple Catcher's animated visual stimulus creates potential confounds not present in simple arrow-cue paradigms.
+    
+    \item \textbf{Lack of systematic hypothesis testing:} Most interpretability studies present results descriptively rather than testing competing hypotheses. The approach of defining specific predictions (spatial, temporal, frequency) for each hypothesis and scoring evidence systematically is rare.
+    
+    \item \textbf{No interpretability analysis of gamified MI-BCI:} Gamified paradigms like Apple Catcher are increasingly popular for patient engagement, but their interpretability has not been examined. These paradigms may introduce unique confounds (e.g., tracking game elements) that standard paradigms avoid.
+    
+    \item \textbf{Unexplained pre-cue discriminability:} The finding that pre-cue windows outperform post-cue windows contradicts standard assumptions about MI timing. No existing study explains this pattern or determines whether it reflects legitimate neural signal or artifact.
+\end{enumerate}
+
+This thesis addresses these gaps by conducting a systematic interpretability analysis of a cross-subject EEGNet model trained on the Apple Catcher paradigm. The analysis uses multiple complementary methods (ERDS analysis, filter visualization, Integrated Gradients), frames interpretation as hypothesis testing with explicit predictions, and specifically examines artifact confounds introduced by the visual paradigm.
+
+% Here's the Chapter 3 draft (~3,200 words, roughly 10-12 pages formatted).
+% Structure:
+
+% Deep Learning for EEG — Schirrmeister's Deep/Shallow ConvNet, EEGNet, cross-subject transfer learning
+% Interpretability in EEG Deep Learning — Filter visualization studies, attribution methods (LRP, IG), comparison to neurophysiology
+% Artifacts and Confounds — Evidence that classifiers learn artifacts, detection methods, artifact-aware interpretability
+% Visual Paradigm Effects — Visual cue confounds, VEPs, distinguishing motor from visual
+% Temporal Window Selection — Standard practice, pre-cue activity, why your finding is unusual
+% Summary and Research Gaps — Five specific gaps this thesis fills
+
+% What the chapter does well:
+
+% Positions your work clearly against existing literature
+% Identifies specific gaps (not just "more research needed")
+% Connects each section back to why it matters for your thesis
+% Acknowledges limitations of existing interpretability work
+
+% What you need to fix or verify:
+
+% Citations to find/verify:
+
+% Fatourechi et al. (2007) on EMG contamination — I referenced this but you should verify it exists and says what I claim
+% Amin et al. (2019) on deep learning learning eye artifacts — same caveat
+% McFarland et al. (2000) on spatial attention — verify
+% Garipelli et al. (2013) on anticipatory potentials — verify
+% Bethge et al. (2022) on artifact sensitivity — verify
+% Bang et al. (2021) on IG for EEG — verify
+% Miladinović et al. (2024) — this one I know exists from your specialization project
+
+
+% Missing citations you should add:
+
+% If you know of specific papers on gamified BCI interpretability, add them
+% Any papers from your supervisor's group that are relevant
+
+
+% Potential additions:
+
+% If there are other IG-for-MI papers you know of, add them to section 3.2.2
+% If there's work specifically on Apple Catcher or similar paradigms, mention it
+
+
+
+% Structural note:
+% The chapter is intentionally focused. I did not include:
+
+% General BCI history (covered adequately in Ch1)
+% Detailed CSP/Riemannian methods (you're not using them)
+% Exhaustive deep learning architecture survey (EEGNet is your focus)
+
+% This keeps the chapter tight and relevant. If your supervisor expects a broader survey, you may need to expand sections 3.1 and 3.2.
+% The "gaps" section is important — it explicitly states what's missing in the literature and sets up your contribution. Reviewers will look for this.

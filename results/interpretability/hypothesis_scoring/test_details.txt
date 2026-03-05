@@ -1,0 +1,293 @@
+================================================================================
+HYPOTHESIS SCORING -- DETAILED EVIDENCE AND REASONING
+================================================================================
+
+--------------------------------------------------------------------------------
+TEST N1: Sensorimotor ERDS significance
+--------------------------------------------------------------------------------
+
+EVIDENCE:
+    Band importance ranking: delta (0.000572) > theta (0.000482) > mu
+  (0.000478) > beta (0.000415) > gamma (0.000202). Mu/beta are 3rd and 4th
+  ranked, not dominant. Model-vs-classical ERD correlation at key
+  sensorimotor channels: mu at C3: r=0.153, C4: r=-0.009; beta at C3:
+  r=0.360, C4: r=0.112. Beta shows moderate correlation at C3 but mu is
+  weak. Overall, delta/theta dominate model saliency, not mu/beta.
+
+SCORES AND REASONING:
+  Artifacts [0]:
+        Artifacts predict broadband or low-frequency dominance. Delta/theta
+    dominance is mildly consistent with slow artifacts, but this test is
+    about ERDS specifically. Inconclusive for artifacts.
+
+  Classical ERD [--]:
+        Classical ERD predicts mu (8-13 Hz) and beta (13-30 Hz) as the
+    dominant bands driving the model. Instead, delta > theta > mu > beta. Mu
+    correlation at C3 is only r=0.154, C4 near zero. Beta at C3 is moderate
+    (r=0.360) but beta is the 4th-ranked band overall. Strong evidence
+    against: ERD is not the primary driver.
+
+  MRCP [0]:
+        MRCP predicts <5 Hz dominance. Delta band leading is
+    frequency-consistent, but this test specifically evaluates mu/beta ERDS.
+    Absence of mu/beta ERDS does not distinguish MRCP directly.
+    Inconclusive.
+
+  Visual/Cue ERP [+]:
+        Visual/Cue ERPs are low-frequency transients. Delta/theta dominance
+    is consistent with stimulus-locked evoked potentials. Moderate support.
+
+
+--------------------------------------------------------------------------------
+TEST N2: Frontal artifact indicators
+--------------------------------------------------------------------------------
+
+EVIDENCE:
+    Channel group ablation accuracy drops: frontal = 1.5%, central = 6.5%,
+  parietal = 5.5%. Frontal/central ratio = 0.23. Only 1/200 trials flagged
+  as artifact-prone. Model relies primarily on central channels, not
+  frontal/ocular sites.
+
+SCORES AND REASONING:
+  Artifacts [--]:
+        Artifact hypothesis predicts frontal channel dominance (eye
+    movements, blinks concentrate at Fp/F sites). Frontal ablation drop is
+    only 1.5% vs central 6.5% -- a 4.3x difference favoring central.
+    Frontal/central saliency ratio 0.23. Only 1/200 artifact trials. Strong
+    evidence against artifact reliance.
+
+  Classical ERD [+]:
+        ERD predicts central (C3/C4) dominance. Central group shows largest
+    ablation impact (6.5%). Moderate support for central importance, though
+    this alone does not confirm ERD.
+
+  MRCP [+]:
+        MRCP predicts Cz/FCz importance. Central group includes these
+    channels. Central 6.5% drop is consistent. Moderate support.
+
+  Visual/Cue ERP [0]:
+        Visual/Cue ERP predicts fronto-central importance. Central > frontal
+    is consistent with the central component. The low frontal contribution
+    argues against purely visual origin, but cue-evoked ERPs project to
+    central channels. Inconclusive.
+
+
+--------------------------------------------------------------------------------
+TEST N3: MRCP presence
+--------------------------------------------------------------------------------
+
+EVIDENCE:
+    No Bereitschaftspotential at Cz or FCz -- ERP shows positive deflection
+  at cue onset, not pre-movement negativity. No lateralized readiness
+  potential: classical LRP pre=0.909, post=0.896 (no asymmetry); model
+  lateralized saliency pre=0.000260, post=0.000452. Signal is
+  stimulus-locked (peaks at t=0), not movement-locked. 5/8 filters have >65%
+  energy <5 Hz (frequency matches MRCP), but temporal profile is wrong.
+
+SCORES AND REASONING:
+  Artifacts [0]:
+        MRCP absence does not directly implicate or rule out artifacts.
+    Inconclusive.
+
+  Classical ERD [0]:
+        MRCP absence does not directly affect ERD hypothesis. Inconclusive.
+
+  MRCP [--]:
+        MRCP hypothesis predicts: (1) Bereitschaftspotential at Cz/FCz --
+    ABSENT; (2) lateralized readiness potential -- ABSENT; (3) pre-movement
+    temporal ramp -- ABSENT (signal is cue-locked). Frequency content
+    matches (<5 Hz) but all three temporal/spatial hallmarks are missing.
+    Strong evidence against.
+
+  Visual/Cue ERP [+]:
+        Absence of MRCP is consistent with Visual/Cue ERP: the
+    stimulus-locked positive deflection at t=0 and lack of pre-movement ramp
+    is exactly what a cue-evoked response would produce. Moderate support.
+
+
+--------------------------------------------------------------------------------
+TEST F1: Temporal filter frequency distribution
+--------------------------------------------------------------------------------
+
+EVIDENCE:
+    All 8 temporal filters target delta/theta (<8 Hz) with minimal mu/beta
+  sensitivity. Time-frequency saliency peak at 1.0 Hz. Top frequency bins:
+  1.0 Hz (0.000211), 2.1 Hz (0.000020), 3.3 Hz (0.000005), 4.4 Hz
+  (0.000002), 5.5 Hz (0.000001). 5/8 filters have >65% energy <5 Hz.
+  Remaining filters peak at 11.7 Hz (mu-adjacent) and 43 Hz (gamma). No
+  filter specifically targets classical mu (8-13) or beta (13-30).
+
+SCORES AND REASONING:
+  Artifacts [+]:
+        Artifacts (especially ocular) concentrate in low frequencies.
+    Delta/theta filter dominance is consistent with slow artifact
+    sensitivity, but this overlaps with legitimate slow cortical activity.
+    Mild support.
+
+  Classical ERD [--]:
+        ERD requires mu (8-13 Hz) and beta (13-30 Hz) filters. No filter
+    specifically targets these bands. Only 2/8 filters reach mu-adjacent
+    frequencies (11.7 Hz). The model cannot extract mu/beta ERD without
+    appropriate filters. Strong evidence against.
+
+  MRCP [+]:
+        MRCP predicts <5 Hz filter sensitivity. 5/8 filters have >65% energy
+    <5 Hz with DC peaks. Frequency profile matches MRCP requirements. Strong
+    support for the frequency match (temporal profile assessed separately).
+
+  Visual/Cue ERP [++]:
+        Cue-evoked ERPs are low-frequency transients (typically <10 Hz). The
+    delta/theta filter profile is highly consistent with detecting
+    stimulus-evoked potentials. Strong support.
+
+
+--------------------------------------------------------------------------------
+TEST F2: Spatial filter ROI focus
+--------------------------------------------------------------------------------
+
+EVIDENCE:
+    Spatial filters show distributed weighting across the full scalp, not
+  focal sensorimotor patterns. Sensorimotor channels (C3, C4, Cz, FC3, FC4)
+  carry moderate weights in some filters (5, 7, 12) but are not consistently
+  dominant. Many filters place largest weights on non-sensorimotor channels
+  including frontal and peripheral sites. Several filters show broad bipolar
+  frontal-to-posterior patterns. Some fronto-central emphasis observed
+  overall.
+
+SCORES AND REASONING:
+  Artifacts [0]:
+        Artifact hypothesis predicts frontal-dominant spatial filters
+    (Fp1/Fp2/F channels for ocular artifacts). Some frontal weighting exists
+    but is not dominant. Inconclusive.
+
+  Classical ERD [-]:
+        ERD predicts focal C3/C4 spatial filters for contralateral
+    sensorimotor rhythm extraction. Spatial filters are distributed, not
+    focal on C3/C4. Moderate evidence against.
+
+  MRCP [0]:
+        MRCP predicts Cz/FCz-centered spatial filters. Some fronto-central
+    emphasis exists but filters are broadly distributed. Inconclusive.
+
+  Visual/Cue ERP [+]:
+        Visual/Cue ERP predicts fronto-central distribution broadly
+    consistent with stimulus processing across multiple areas. The
+    distributed, non-focal pattern with fronto-central emphasis matches this
+    prediction. Moderate support.
+
+
+--------------------------------------------------------------------------------
+TEST A1: Attribution spatial distribution
+--------------------------------------------------------------------------------
+
+EVIDENCE:
+    Top 5 channels by bootstrap importance: FC6 (0.0051), FC5 (0.0030), C4
+  (0.0021), C6 (0.0017), CP3 (0.0016). FC6 dominant (0.00509), nearly 2x FC5
+  (0.00301). Distribution is fronto-central, right-lateralized. Classic
+  sensorimotor C3 ranks 9th (0.00124), C4 ranks 3rd (0.00206). FCz ranks
+  17th (0.00093), Cz ranks 19th (0.00088). Frontal/central saliency ratio =
+  0.60 (central dominates).
+
+SCORES AND REASONING:
+  Artifacts [-]:
+        Artifact hypothesis predicts frontal (Fp/F) channel dominance for
+    ocular artifacts. Top channels are FC (fronto-central), not Fp
+    (frontal-polar). FC6/FC5 dominance is atypical for pure ocular
+    artifacts. Moderate evidence against.
+
+  Classical ERD [-]:
+        ERD predicts C3/C4 dominance. C4 is 3rd but C3 is only 9th. FC6/FC5
+    dominate instead. The spatial pattern does not match the focal
+    sensorimotor topography expected for mu/beta ERD. Moderate evidence
+    against.
+
+  MRCP [-]:
+        MRCP predicts Cz/FCz dominance. FCz ranks 17th, Cz ranks 19th. These
+    are in the bottom half. FC6/FC5 domination is not consistent with
+    midline MRCP generators. Moderate evidence against.
+
+  Visual/Cue ERP [++]:
+        Visual/Cue ERP predicts fronto-central distribution with bilateral
+    involvement. FC6/FC5 dominance is fronto-central. The pattern spans both
+    hemispheres (FC5 left, FC6 right) with right-lateralization. This
+    matches cue-evoked differential processing at fronto-central sites.
+    Strong support.
+
+
+--------------------------------------------------------------------------------
+TEST A2: Attribution temporal concentration
+--------------------------------------------------------------------------------
+
+EVIDENCE:
+    Gradient saliency ratio (pre/post) = 1.01 (nearly equal). Ablation:
+  pre-cue masking IMPROVES accuracy by 8.0%, post-cue masking drops accuracy
+  by 24.5%. Saliency peaks at cue onset (t=0) with strongest functional
+  dependence in the 0-0.5s post-cue window. Pre-cue information is actually
+  harmful to classification when present alone. Permutation test pre vs
+  post: p=0.003.
+
+SCORES AND REASONING:
+  Artifacts [-]:
+        Artifacts predict early/diffuse timing without cue-locking. The
+    sharp cue-onset peak and post-cue dependence is more stimulus-specific
+    than expected for random artifacts. Moderate evidence against.
+
+  Classical ERD [-]:
+        ERD predicts post-cue 0.5-1.5s peak (ERD develops gradually after
+    imagery onset). The peak is at 0-0.5s, earlier than typical ERD latency.
+    The strongest ablation impact is immediate post-cue, not during
+    sustained imagery. Moderate evidence against.
+
+  MRCP [--]:
+        MRCP predicts pre-cue importance (pre-movement potential building
+    before cue). Pre-cue masking IMPROVES accuracy (+8%), meaning pre-cue
+    information is detrimental. This directly contradicts the MRCP
+    prediction. Strong evidence against.
+
+  Visual/Cue ERP [++]:
+        Visual/Cue ERP predicts cue-locked peak at t~0 with strongest
+    influence in the immediate post-cue window. Saliency peaks exactly at
+    cue onset. Post-cue masking causes 24.5% accuracy drop. Pre-cue is
+    irrelevant/harmful. This is exactly the temporal profile expected for a
+    cue-evoked response. Strong support.
+
+
+--------------------------------------------------------------------------------
+TEST A3: Attribution lateralization
+--------------------------------------------------------------------------------
+
+EVIDENCE:
+    Signed IG sign-flip test: 3/32 channels show sign flips between classes
+  (CP5, F2, FC6). Zero sensorimotor channels (C3, C4, C1, C2, FC3, FC4)
+  flip. Right hemisphere dominant for BOTH classes. MI_left post-cue
+  LI=+0.082 (right>left), MI_right post-cue LI=-0.152 (right>left). No
+  contralateral lateralization pattern. Cross-subject consistency: mean
+  ISC=0.963.
+
+SCORES AND REASONING:
+  Artifacts [-]:
+        Artifacts predict no systematic lateralization. The consistent
+    right-lateralized pattern across subjects is actually more structured
+    than expected for random artifacts. Mild evidence against.
+
+  Classical ERD [--]:
+        ERD predicts contralateral lateralization: left MI -> right
+    hemisphere dominant, right MI -> left hemisphere dominant. Sign-flip
+    test shows NO contralateral pattern at sensorimotor channels. Right
+    hemisphere dominates for BOTH classes. 0/6 key sensorimotor channels
+    flip. This is the most direct test of genuine MI, and it fails
+    definitively. Strong evidence against.
+
+  MRCP [-]:
+        MRCP predicts midline (Cz/FCz) with subtle lateralization. The
+    strong right-hemisphere dominance without class-dependent lateralization
+    is inconsistent with MRCP. Moderate evidence against.
+
+  Visual/Cue ERP [++]:
+        Visual/Cue ERP predicts both hemispheres involved with potential
+    right-lateralized processing of lateralized visual cues. The consistent
+    right-lateralized pattern for all subjects with no contralateral flips
+    is consistent with a shared visual/attentional response. The
+    right-hemisphere dominance may reflect right-hemisphere specialization
+    for spatial attention. High cross-subject consistency (ISC=0.963)
+    supports a universal, stimulus-driven mechanism. Strong support.

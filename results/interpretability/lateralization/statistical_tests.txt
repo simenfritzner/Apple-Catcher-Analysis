@@ -1,0 +1,26 @@
+Lateralization Statistical Tests
+============================================================
+
+MI_left (class 0):
+  N trials: 4070
+  Post-cue LI: 0.081861 ± 0.087095
+  One-sample t-test (LI > 0): t=59.9552, p=0.000000
+  Sign-flip permutation test (LI > 0): p=0.000100
+  Interpretation: Significant contralateral lateralization
+
+MI_right (class 1):
+  N trials: 4070
+  Post-cue LI: -0.151954 ± 0.089115
+  One-sample t-test (LI > 0): t=-108.7687, p=0.000000
+  Sign-flip permutation test (LI > 0): p=1.000000
+  Interpretation: NOT significant contralateral lateralization
+
+Cross-class combined laterality:
+  Mean combined post-cue LI: -0.035047
+  (Positive = both classes show contralateral dominance)
+
+Hemisphere × Class interaction (post-cue):
+  MI_left  (R−L): 0.000287
+  MI_right (R−L): 0.000411
+  Interaction (MI_left minus MI_right): -0.000124
+  (Positive interaction = classes use opposite hemispheres)

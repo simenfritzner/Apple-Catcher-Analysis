@@ -1,0 +1,12 @@
+Temporal Filter Characterization
+======================================================================
+  Filter   Peak (Hz)   BW_-3dB (Hz)        Band
+--------------------------------------------------
+       0        43.9           33.7       gamma
+       1         0.5            1.5   broadband
+       2         0.5            2.0   broadband
+       3        12.2            3.4          mu
+       4         0.5            1.5   broadband
+       5         0.5            1.5   broadband
+       6        13.2            2.9        beta
+       7         0.5            2.9   broadband

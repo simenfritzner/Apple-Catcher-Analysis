@@ -1,0 +1,69 @@
+% chapters/abstract.tex
+\chapter*{Abstract}
+\addcontentsline{toc}{chapter}{Abstract}
+
+% TARGET: 1 page (approximately 250-350 words)
+%
+% STRUCTURE:
+% - Context (1-2 sentences)
+% - Problem (2-3 sentences)
+% - Methods (2-3 sentences)
+% - Results (3-4 sentences)
+% - Conclusions (2-3 sentences)
+
+% ============================================================
+% DRAFT TEMPLATE - FILL IN AFTER RESULTS ARE KNOWN
+% ============================================================
+
+% CONTEXT:
+% Motor Imagery Brain-Computer Interfaces (MI-BCI) offer promise for 
+% stroke rehabilitation by enabling patients to practice motor actions 
+% through neural signals alone. The Apple Catcher system, a gamified 
+% MI-BCI paradigm, previously achieved 78\% cross-subject classification 
+% accuracy using EEGNet, a compact deep learning architecture.
+
+% PROBLEM:
+% However, this high accuracy raises concerns about validity. The system 
+% uses a visual paradigm where an apple falls toward the target hand 
+% before the formal cue, potentially introducing eye movement artifacts 
+% or visual processing confounds. The finding that the pre-cue window 
+% dramatically outperformed the post-cue window is counterintuitive and 
+% unexplained. Without understanding what drives classification, the 
+% system's clinical applicability remains uncertain.
+
+% METHODS:
+% This thesis conducts a systematic interpretability analysis of EEGNet 
+% trained on the Apple Catcher dataset (40 subjects, 200 trials each). 
+% We employ three complementary approaches: (1) neurophysiological 
+% characterization of the dataset using time-frequency analysis for 
+% event-related desynchronization and slow potentials for movement-related 
+% cortical potentials; (2) visualization of learned temporal and spatial 
+% filters; and (3) attribution analysis using Integrated Gradients to 
+% identify decision-relevant features. Results are evaluated against 
+% competing hypotheses: artifacts, classical ERD, motor preparation 
+% (MRCP), and visual processing.
+
+% RESULTS:
+% [TO BE COMPLETED AFTER ANALYSIS]
+% Our analysis reveals that [primary finding]. Temporal filters 
+% predominantly target [frequency bands], while spatial filters focus 
+% on [brain regions]. Attribution analysis shows that classification 
+% decisions are primarily driven by [features] localized to [regions] 
+% during the [time period]. Correlation analysis indicates [relationship 
+% between ERD/accuracy].
+
+% CONCLUSIONS:
+% [TO BE COMPLETED AFTER ANALYSIS]
+% These findings suggest that the Apple Catcher's classification 
+% performance is [primarily valid / partially confounded / concerning]. 
+% We provide specific recommendations for [deployment / further 
+% development / paradigm modification] and demonstrate a methodology 
+% for validating deep learning models in visual MI-BCI applications.
+
+% ============================================================
+% KEYWORDS
+% ============================================================
+\vspace{1cm}
+\noindent\textbf{Keywords:} Brain-Computer Interface, Motor Imagery, 
+Deep Learning, EEGNet, Interpretability, Integrated Gradients, 
+Event-Related Desynchronization, Transfer Learning

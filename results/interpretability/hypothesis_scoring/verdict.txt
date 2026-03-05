@@ -1,0 +1,74 @@
+======================================================================
+HYPOTHESIS SCORING -- FINAL VERDICT
+======================================================================
+
+------------------------------------------------------------
+  Artifacts
+------------------------------------------------------------
+    ++  (strong support):          0
+    +   (moderate support):        1
+    0   (inconclusive):            3
+    -   (moderate against):        3
+    --  (strong against):          1
+    Net score:                     -4 / 16
+
+------------------------------------------------------------
+  Classical ERD
+------------------------------------------------------------
+    ++  (strong support):          0
+    +   (moderate support):        1
+    0   (inconclusive):            1
+    -   (moderate against):        3
+    --  (strong against):          3
+    Net score:                     -8 / 16
+
+------------------------------------------------------------
+  MRCP
+------------------------------------------------------------
+    ++  (strong support):          0
+    +   (moderate support):        2
+    0   (inconclusive):            2
+    -   (moderate against):        2
+    --  (strong against):          2
+    Net score:                     -4 / 16
+
+------------------------------------------------------------
+  Visual/Cue ERP
+------------------------------------------------------------
+    ++  (strong support):          4
+    +   (moderate support):        3
+    0   (inconclusive):            1
+    -   (moderate against):        0
+    --  (strong against):          0
+    Net score:                     +11 / 16
+
+============================================================
+OVERALL RANKING
+============================================================
+
+  1. Visual/Cue ERP       +11 / 16
+  2. Artifacts            -4 / 16
+  3. MRCP                 -4 / 16
+  4. Classical ERD        -8 / 16
+
+============================================================
+VERDICT
+============================================================
+
+The evidence strongly supports the Visual/Cue ERP hypothesis (net score +11/16).
+
+The model classifies left vs right motor imagery by exploiting a cue-evoked differential response at fronto-central channels (FC5/FC6), concentrated in the immediate post-cue window (0-0.5s). This signal is:
+
+  1. Low-frequency (delta/theta, <8 Hz) -- not mu/beta ERD/ERS
+  2. Stimulus-locked at t=0 -- not pre-movement preparatory activity
+  3. Fronto-central -- not focal on C3/C4 sensorimotor cortex
+  4. Right-lateralized for BOTH classes -- not contralateral
+  5. Highly consistent across all 40 subjects (ISC=0.963)
+
+Ruled-out hypotheses:
+  - Artifacts (-4):
+    Frontal channels contribute minimally (1.5% ablation drop), central channels dominate (6.5%), only 1/200 artifact trials.
+  - MRCP (-4):
+    No Bereitschaftspotential, no LRP, pre-cue masking improves accuracy. Frequency matches (<5 Hz) but temporal/spatial profile wrong.
+  - Classical ERD (-8):
+    No mu/beta filters, no focal C3/C4 spatial pattern, no contralateral lateralization. All core predictions fail.

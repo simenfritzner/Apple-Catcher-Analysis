@@ -2,7 +2,8 @@
 Run comprehensive interpretability analysis on the all-subjects EEGNet model.
 
 Executes Phase 1 (filter visualization), Phase 2 (saliency/ablation),
-and Phase 6 (artifact investigation) from SPEC.md.
+Phase 3 (DeepLIFT cross-validation), and Phase 6 (artifact investigation)
+from SPEC.md.
 """
 
 import sys
@@ -381,6 +382,206 @@ def run_phase6_artifacts(
     print(f"  Saved to {out}")
 
 
+def run_phase3_deeplift(
+    model: EEGNet,
+    data: np.ndarray,
+    labels: np.ndarray,
+    channel_names: list[str],
+) -> None:
+    """Phase 3: DeepLIFT attribution — cross-validate with gradient methods."""
+    print("\n" + "=" * 60)
+    print("PHASE 3: DeepLIFT Attribution")
+    print("=" * 60)
+
+    out = OUTPUT_DIR / "phase3_deeplift"
+    out.mkdir(parents=True, exist_ok=True)
+
+    n_subset = min(200, len(labels))
+    x = torch.tensor(data[:n_subset], dtype=torch.float32).unsqueeze(1)
+    y = torch.tensor(labels[:n_subset], dtype=torch.long)
+    print(f"  Using {n_subset} trials, shape={x.shape}")
+
+    saliency_gen = SaliencyMapGenerator(model, device="cpu")
+    analyzer = TemporalImportanceAnalyzer(model, device="cpu", batch_size=32)
+
+    from eeg_mi.interpretability.visualization import (
+        plot_method_comparison,
+        plot_temporal_importance,
+        plot_pre_vs_post_cue_comparison,
+        plot_channel_importance,
+        plot_saliency_map,
+    )
+
+    # ── 3.2 Compare all attribution methods ──────────────────────────────
+    print("  Running compare_methods() (all 4 methods)...")
+    comparison = saliency_gen.compare_methods(
+        x, target_class=None,
+        methods=["vanilla", "integrated_gradients", "gradient_x_input", "deeplift"],
+        sfreq=SFREQ, tmin=TMIN,
+    )
+
+    plot_method_comparison(comparison, cue_onset=CUE_ONSET, save_path=out / "method_comparison.png")
+    plt.close("all")
+
+    # Compute inter-method correlation (temporal importance profiles)
+    from scipy.stats import pearsonr, spearmanr
+
+    method_names = list(comparison.keys())
+    n_methods = len(method_names)
+
+    print("\n  Inter-method temporal importance correlations (Pearson r):")
+    corr_lines = ["Inter-method Temporal Importance Correlations", "=" * 55, ""]
+
+    pearson_matrix = np.zeros((n_methods, n_methods))
+    spearman_matrix = np.zeros((n_methods, n_methods))
+
+    for i in range(n_methods):
+        for j in range(n_methods):
+            ti = comparison[method_names[i]]["temporal_importance"]
+            tj = comparison[method_names[j]]["temporal_importance"]
+            r_p, _ = pearsonr(ti, tj)
+            r_s, _ = spearmanr(ti, tj)
+            pearson_matrix[i, j] = r_p
+            spearman_matrix[i, j] = r_s
+
+    # Print Pearson matrix
+    header = f"{'':>22}" + "".join(f"{m:>22}" for m in method_names)
+    corr_lines.append("Pearson r:")
+    corr_lines.append(header)
+    for i, m in enumerate(method_names):
+        row = f"{m:>22}" + "".join(f"{pearson_matrix[i, j]:>22.4f}" for j in range(n_methods))
+        corr_lines.append(row)
+        print(f"    {row}")
+
+    corr_lines.append("")
+    corr_lines.append("Spearman rho:")
+    corr_lines.append(header)
+    for i, m in enumerate(method_names):
+        row = f"{m:>22}" + "".join(f"{spearman_matrix[i, j]:>22.4f}" for j in range(n_methods))
+        corr_lines.append(row)
+
+    with open(out / "method_correlations.txt", "w") as f:
+        f.write("\n".join(corr_lines) + "\n")
+
+    # Per-method pre/post-cue importance summary
+    print("\n  Per-method pre/post-cue importance:")
+    summary_lines = [
+        "Per-Method Pre/Post-Cue Importance",
+        "=" * 55,
+        "",
+        f"{'Method':>22}  {'Pre-Cue':>10}  {'Post-Cue':>10}  {'Ratio':>8}",
+    ]
+
+    cue_idx = int((CUE_ONSET - TMIN) * SFREQ)
+    for method in method_names:
+        sal_map = comparison[method]["saliency_map"]
+        pre = sal_map[:, :, :cue_idx].mean()
+        post = sal_map[:, :, cue_idx:].mean()
+        ratio = pre / (post + 1e-10)
+        line = f"{method:>22}  {pre:>10.6f}  {post:>10.6f}  {ratio:>8.3f}"
+        summary_lines.append(line)
+        print(f"    {line}")
+
+    with open(out / "pre_post_by_method.txt", "w") as f:
+        f.write("\n".join(summary_lines) + "\n")
+
+    # ── 3.2b DeepLIFT-specific pre/post-cue analysis (with ablation) ─────
+    print("\n  DeepLIFT pre-cue vs post-cue (with ablation)...")
+    dl_pre_post = analyzer.analyze_pre_vs_post_cue(
+        x, y, cue_onset=CUE_ONSET, sfreq=SFREQ, tmin=TMIN,
+        method="deeplift",
+    )
+
+    print(f"    Pre-cue importance:  {dl_pre_post['pre_cue_importance']:.6f}")
+    print(f"    Post-cue importance: {dl_pre_post['post_cue_importance']:.6f}")
+    print(f"    Ratio (pre/post):    {dl_pre_post['importance_ratio']:.3f}")
+    print(f"    Baseline accuracy:   {dl_pre_post['baseline_accuracy']:.4f}")
+
+    plot_pre_vs_post_cue_comparison(
+        dl_pre_post, cue_onset=CUE_ONSET,
+        save_path=out / "deeplift_pre_post_comparison.png",
+    )
+    plt.close("all")
+
+    with open(out / "deeplift_pre_post_results.txt", "w") as f:
+        for k, v in dl_pre_post.items():
+            f.write(f"{k}: {v:.6f}\n")
+
+    # ── 3.3 DeepLIFT temporal profile ────────────────────────────────────
+    print("  DeepLIFT temporal profile (sliding window)...")
+    dl_temporal = analyzer.analyze_temporal_profile(
+        x, y, sfreq=SFREQ, tmin=TMIN, window_size=0.5, step_size=0.1,
+        method="deeplift",
+    )
+
+    plot_temporal_importance(
+        dl_temporal["times"], dl_temporal["gradient_importance"],
+        dl_temporal["ablation_window_centers"], dl_temporal["ablation_accuracy_drops"],
+        cue_onset=CUE_ONSET, title="DeepLIFT Temporal Importance",
+        save_path=out / "deeplift_temporal_profile.png",
+    )
+    plt.close("all")
+
+    # ── 3.3b DeepLIFT channel importance ─────────────────────────────────
+    print("  DeepLIFT channel importance...")
+    dl_channels = analyzer.analyze_channel_importance(
+        x, channel_names=channel_names, method="deeplift", top_k=15,
+    )
+    top_ch = dl_channels.get("top_channels", dl_channels["top_indices"][:5])
+    print(f"    Top 5 channels (DeepLIFT): {top_ch}")
+
+    plot_channel_importance(
+        dl_channels["channel_importance"], channel_names, top_k=15,
+        title="Channel Importance (DeepLIFT)",
+        save_path=out / "deeplift_channel_importance.png",
+    )
+    plt.close("all")
+
+    # ── 3.3c DeepLIFT saliency heatmap ───────────────────────────────────
+    print("  DeepLIFT saliency heatmap...")
+    dl_saliency = saliency_gen.deeplift(x)
+    times, dl_imp_map, _ = saliency_gen.compute_time_channel_map(dl_saliency, SFREQ, TMIN)
+
+    plot_saliency_map(
+        dl_imp_map, times, channel_names, cue_onset=CUE_ONSET,
+        title="DeepLIFT Saliency Map",
+        save_path=out / "deeplift_saliency_heatmap.png",
+    )
+    plt.close("all")
+
+    # ── Channel importance comparison across methods ─────────────────────
+    print("  Channel importance comparison across methods...")
+    chan_corr_lines = ["Channel Importance Comparison Across Methods", "=" * 55, ""]
+
+    ig_channels = comparison["integrated_gradients"]["channel_importance"]
+    dl_channels_arr = comparison["deeplift"]["channel_importance"]
+    r_chan, p_chan = pearsonr(ig_channels, dl_channels_arr)
+    rho_chan, p_rho = spearmanr(ig_channels, dl_channels_arr)
+
+    chan_corr_lines.append(f"IG vs DeepLIFT channel importance:")
+    chan_corr_lines.append(f"  Pearson r  = {r_chan:.4f} (p = {p_chan:.2e})")
+    chan_corr_lines.append(f"  Spearman ρ = {rho_chan:.4f} (p = {p_rho:.2e})")
+
+    print(f"    IG vs DeepLIFT channel importance: r={r_chan:.4f}, ρ={rho_chan:.4f}")
+
+    # Top-5 overlap
+    ig_top5 = set(np.argsort(ig_channels)[::-1][:5])
+    dl_top5 = set(np.argsort(dl_channels_arr)[::-1][:5])
+    overlap = ig_top5 & dl_top5
+    chan_corr_lines.append(f"  Top-5 overlap: {len(overlap)}/5 channels")
+    if channel_names:
+        chan_corr_lines.append(f"  IG top-5:      {[channel_names[i] for i in sorted(ig_top5)]}")
+        chan_corr_lines.append(f"  DeepLIFT top-5: {[channel_names[i] for i in sorted(dl_top5)]}")
+        chan_corr_lines.append(f"  Shared:         {[channel_names[i] for i in sorted(overlap)]}")
+
+    print(f"    Top-5 overlap: {len(overlap)}/5")
+
+    with open(out / "channel_importance_comparison.txt", "w") as f:
+        f.write("\n".join(chan_corr_lines) + "\n")
+
+    print(f"  Saved to {out}")
+
+
 def main() -> None:
     print("EEGNet Interpretability Analysis")
     print("=" * 60)
@@ -398,6 +599,7 @@ def main() -> None:
     # Run analyses
     run_phase1_filters(model, channel_names)
     run_phase2_saliency(model, data, labels, channel_names)
+    run_phase3_deeplift(model, data, labels, channel_names)
     run_phase6_artifacts(model, data, labels, channel_names)
 
     print("\n" + "=" * 60)

@@ -1,0 +1,10 @@
+Attribution ROI Percentages
+======================================================================
+Note: percentages show fraction of total channel importance in each ROI
+
+     Class        Period   Sensorimotor%    Frontal%    Parietal%
+-----------------------------------------------------------------
+   MI_left    full_epoch            36.5        42.4         18.9
+   MI_left      post_cue            39.3        38.8         19.7
+  MI_right    full_epoch            36.2        42.5         18.9
+  MI_right      post_cue            39.4        38.9         19.2

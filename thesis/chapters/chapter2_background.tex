@@ -1,0 +1,558 @@
+% chapters/chapter2_background.tex
+\chapter{Background and Theory}
+\label{ch:background}
+
+This chapter provides the theoretical foundations necessary to understand the methods and interpret the findings of this thesis. I begin with the neurophysiology of motor imagery, establishing what neural signatures we expect to find in a valid MI-BCI system. I then describe potential confounds—artifacts and visual processing—that could contaminate these signals. Next, I detail the EEGNet architecture, emphasizing aspects that make it amenable to interpretation. Finally, I introduce the interpretability methods used to analyze the trained model: filter visualization and Integrated Gradients.
+
+
+% ============================================================
+% 2.1 NEUROPHYSIOLOGY OF MOTOR IMAGERY
+% ============================================================
+\section{Neurophysiology of Motor Imagery}
+\label{sec:bg_neurophysiology}
+
+Motor imagery (MI) is the mental simulation of movement without overt motor output. When a person imagines clenching their right hand, they engage many of the same cortical networks involved in actually performing that action \cite{pfurtscheller2001motor}. This neural overlap is the foundation of MI-BCI: if imagined and executed movements share neural substrates, then detecting the neural correlates of imagery allows us to infer motor intention without requiring physical movement.
+
+Two primary electrophysiological signatures characterize motor imagery in EEG: event-related desynchronization (ERD) in the sensorimotor rhythms, and movement-related cortical potentials (MRCP) associated with motor preparation. Understanding these signatures is essential for evaluating whether a classifier has learned legitimate MI features.
+
+
+% ------------------------------------------------------------
+\subsection{Event-Related Desynchronization and Synchronization}
+\label{subsec:bg_erds}
+
+The dominant neural signature of motor imagery is event-related desynchronization (ERD)—a decrease in oscillatory power in specific frequency bands relative to a baseline period \cite{pfurtscheller1999erds}. ERD reflects increased cortical activation: when a brain region becomes engaged in processing, the synchronized idle rhythms of that region are suppressed.
+
+\subsubsection{Frequency Bands}
+
+Two frequency bands are particularly relevant for motor imagery:
+
+\textbf{Mu rhythm (8-13 Hz):} The mu rhythm is an idle oscillation originating from the sensorimotor cortex. It is functionally analogous to the occipital alpha rhythm but is localized over central electrode sites (C3, Cz, C4). During motor execution or imagery, mu power decreases—this is mu-ERD. The mu rhythm is the most robust and widely-used feature for MI-BCI classification.
+
+\textbf{Beta rhythm (13-30 Hz):} Beta oscillations over sensorimotor cortex also show ERD during motor imagery, though typically with smaller magnitude than mu-ERD. An important phenomenon is the post-movement beta rebound—a transient increase in beta power (event-related synchronization, or ERS) following the termination of movement or imagery. This beta-ERS can serve as an additional classification feature.
+
+\subsubsection{Spatial Distribution}
+
+A critical property of sensorimotor ERD is its lateralization. The motor cortex is organized somatotopically, with the hand representation located in the lateral precentral gyrus. Due to the contralateral organization of motor pathways, right-hand imagery produces maximal ERD over the left hemisphere (electrode C3), while left-hand imagery produces maximal ERD over the right hemisphere (electrode C4).
+
+This contralateral pattern is the primary basis for left/right hand MI classification. A valid classifier should exploit this spatial asymmetry. The relevant electrodes in the international 10-20 system include:
+
+\begin{itemize}
+    \item \textbf{C3, C4}: Central electrodes directly over left and right motor cortex
+    \item \textbf{CP3, CP4}: Centro-parietal sites, slightly posterior
+    \item \textbf{FC3, FC4}: Fronto-central sites, slightly anterior
+\end{itemize}
+
+Figure~\ref{fig:erd_topography} illustrates the expected topographic pattern during right-hand motor imagery: ERD concentrated over C3 with relative sparing of C4.
+
+% TODO: Add figure showing idealized ERD topography
+
+\subsubsection{Temporal Dynamics}
+
+ERD does not appear instantaneously. Following a cue to imagine movement, ERD typically emerges 300-500 ms later and is sustained throughout the imagery period \cite{pfurtscheller2001motor}. The onset latency reflects the time required for cognitive processing of the cue and initiation of the imagery process.
+
+For the Apple Catcher paradigm, this timing is important. If ERD is the primary discriminative feature, we would expect classification to depend mainly on the post-cue period when ERD is sustained. The finding that pre-cue activity is highly discriminative challenges this expectation and suggests that either (1) subjects begin imagery before the formal cue, (2) preparatory processes distinct from ERD are involved, or (3) the discriminative signal is not ERD at all.
+
+\subsubsection{Quantification}
+
+ERD/ERS is typically quantified as a percentage change from baseline:
+
+\begin{equation}
+    \text{ERD/ERS\%} = \frac{R - A}{R} \times 100
+    \label{eq:erds}
+\end{equation}
+
+where $R$ is the power in a reference (baseline) period and $A$ is the power in the active (task) period. Negative values indicate ERD (power decrease), while positive values indicate ERS (power increase).
+
+The choice of baseline period is critical. Typically, a pre-stimulus interval is used—for example, -2.0s to -0.5s relative to cue onset. However, in the Apple Catcher paradigm, the visual stimulus (falling apple) appears before the formal cue, potentially contaminating what would normally be considered baseline. This complicates ERD quantification and is addressed in the Methods chapter.
+
+
+% ------------------------------------------------------------
+\subsection{Movement-Related Cortical Potentials}
+\label{subsec:bg_mrcp}
+
+Movement-related cortical potentials (MRCP) are slow voltage shifts that precede voluntary movement, reflecting motor preparation and planning \cite{shibasaki2006bereitschaftspotential}. Unlike ERD, which is an oscillatory phenomenon visible in the frequency domain, MRCP is a slow potential visible in the time domain after appropriate low-pass filtering.
+
+\subsubsection{Components}
+
+The MRCP complex includes several components:
+
+\textbf{Bereitschaftspotential (BP):} Also called the readiness potential, the BP is a slow negative shift beginning 1-2 seconds before movement onset. It has two phases:
+\begin{itemize}
+    \item \textit{Early BP} (-2s to -0.5s): Bilateral, symmetric distribution over both hemispheres, maximal at the vertex (Cz)
+    \item \textit{Late BP} (-0.5s to movement): Becomes lateralized toward the contralateral hemisphere
+\end{itemize}
+
+\textbf{Contingent Negative Variation (CNV):} When a warning stimulus precedes an imperative stimulus (as in the Apple Catcher paradigm, where the falling apple precedes the need to "catch" it), a sustained negative potential called the CNV develops during the interval. The CNV reflects anticipation and motor preparation.
+
+\subsubsection{Relevance to Apple Catcher}
+
+The Apple Catcher paradigm has a built-in warning stimulus: the apple begins falling before subjects must respond. This creates conditions favorable for CNV development. If subjects engage in motor preparation upon seeing the apple—planning which hand to imagine clenching—this preparatory activity would appear in the pre-cue period.
+
+MRCP could therefore explain the unexpected finding that pre-cue activity is highly discriminative. The "intention to act" may generate more robust classification features than the sustained imagery itself. This hypothesis predicts:
+
+\begin{itemize}
+    \item Low-frequency activity ($<$3 Hz) at central midline sites (Cz, FCz)
+    \item Slow negative potential buildup before cue onset
+    \item Possible lateralization toward the contralateral hemisphere
+\end{itemize}
+
+\subsubsection{Detection Requirements}
+
+MRCP is a low-frequency phenomenon, typically below 3 Hz. Many EEG preprocessing pipelines apply high-pass filters at 1 Hz or higher, which attenuates or eliminates MRCP. For the Apple Catcher analysis, no high-pass filtering was applied during model training, meaning MRCP information is potentially preserved in the data. However, this also means low-frequency artifacts are preserved.
+
+
+% ------------------------------------------------------------
+\subsection{Distinguishing Preparation from Execution}
+\label{subsec:bg_prep_vs_exec}
+
+A conceptual distinction exists between motor preparation (planning a movement) and motor execution (performing it). In imagery, there is no physical execution, but the preparation phase still occurs. The question is whether MI-BCI systems should target preparatory or "execution" phase signals.
+
+Traditional MI-BCI focuses on the post-cue period, under the assumption that subjects are actively "executing" their imagery during this time. However, several lines of evidence suggest that preparatory signals may be equally or more informative:
+
+\begin{enumerate}
+    \item Preparatory activity (MRCP, early ERD) reflects committed motor intention, whereas sustained imagery may be variable in quality and attention.
+    \item The transition from rest to imagery creates a distinct neural signature, while sustained imagery may plateau.
+    \item Anticipatory processes triggered by predictable cues engage motor planning networks automatically.
+\end{enumerate}
+
+For the Apple Catcher paradigm, the visual cue (falling apple) provides advance information about which hand to prepare. This could engage preparatory circuits before the formal analysis window traditionally begins.
+
+
+% ------------------------------------------------------------
+\subsection{Sources of Artifacts in EEG}
+\label{subsec:bg_artifacts}
+
+EEG signals are contaminated by non-neural electrical activity that can be class-discriminative, leading classifiers to learn spurious features. Understanding these artifacts is essential for interpreting model behavior.
+
+\subsubsection{Ocular Artifacts}
+
+Eye movements and blinks produce large electrical signals that propagate to scalp electrodes, particularly at frontal sites (Fp1, Fp2, F7, F8).
+
+\textbf{Horizontal eye movements:} Lateral eye movements create a potential difference between electrodes near the left and right eyes. If subjects track the falling apple with their eyes—looking left when it falls left, right when it falls right—this produces a perfectly class-discriminative artifact. The signal would appear at frontal electrodes, time-locked to apple appearance, and would be lateralized according to apple direction.
+
+\textbf{Vertical eye movements and blinks:} Blinks produce large artifacts primarily at Fp1 and Fp2. While blinks are not typically class-discriminative, they can add noise that obscures neural signals.
+
+\subsubsection{Muscle Artifacts}
+
+Electromyographic (EMG) activity from facial and neck muscles contaminates EEG, particularly at temporal and frontal electrodes. EMG artifacts are typically broadband but most prominent at higher frequencies ($>$20 Hz). Potential sources include:
+
+\begin{itemize}
+    \item Jaw clenching or teeth grinding
+    \item Facial expressions
+    \item Neck muscle tension
+    \item Anticipatory tension that could differ between left and right trials
+\end{itemize}
+
+\subsubsection{Why Artifacts Matter for This Thesis}
+
+A classifier trained on artifact-contaminated data may achieve high accuracy by learning to detect artifacts rather than neural signals. This is problematic for several reasons:
+
+\begin{enumerate}
+    \item \textbf{Scientific validity:} Artifact-driven classification tells us nothing about motor imagery neuroscience.
+    \item \textbf{Clinical applicability:} Patients with motor impairments may have abnormal eye movements or muscle control, making artifact-based models unreliable.
+    \item \textbf{Generalization:} Artifact patterns depend on paradigm details (e.g., where the apple appears) and may not transfer to modified versions of the task.
+\end{enumerate}
+
+The interpretability analysis in this thesis specifically tests for artifact contributions by examining frontal electrode activity, temporal coincidence with visual stimuli, and spatial filter weights.
+
+
+% ============================================================
+% 2.2 EEGNET ARCHITECTURE
+% ============================================================
+\section{EEGNet Architecture}
+\label{sec:bg_eegnet}
+
+EEGNet is a compact convolutional neural network designed for EEG-based brain-computer interfaces \cite{lawhern2018eegnet}. Its architecture incorporates domain knowledge about EEG signal processing, making it both effective and partially interpretable. This section describes the architecture in detail, emphasizing aspects relevant to the interpretability analysis.
+
+
+% ------------------------------------------------------------
+\subsection{Design Philosophy}
+\label{subsec:bg_eegnet_philosophy}
+
+EEGNet was designed to address two challenges common in BCI applications:
+
+\begin{enumerate}
+    \item \textbf{Limited training data:} BCI datasets typically contain hundreds to thousands of trials per subject, far less than the millions of samples used to train image classifiers. EEGNet uses depthwise separable convolutions to dramatically reduce parameter count, mitigating overfitting.
+    
+    \item \textbf{Interpretability:} Unlike generic CNNs, EEGNet's layers correspond to established signal processing operations. Temporal convolutions act as bandpass filters; spatial convolutions act as spatial filters analogous to Common Spatial Patterns (CSP). This design allows learned representations to be compared against known neurophysiology.
+\end{enumerate}
+
+
+% ------------------------------------------------------------
+\subsection{Temporal Convolution}
+\label{subsec:bg_eegnet_temporal}
+
+The first layer of EEGNet applies temporal convolutions independently to each EEG channel. This operation is equivalent to filtering each channel with a bank of learned finite impulse response (FIR) filters.
+
+\subsubsection{Architecture}
+
+The temporal convolution uses $F_1$ filters (typically $F_1 = 8$), each with kernel size $(1, K)$ where $K$ is the kernel length in samples. The kernel operates across the time dimension while preserving channel independence. For a kernel length of 64 samples at 250 Hz sampling rate, each filter spans 256 ms of data.
+
+\subsubsection{Interpretation as Bandpass Filtering}
+
+A 1D convolution is mathematically equivalent to FIR filtering. The learned kernel weights define the filter's impulse response, and the frequency response can be computed via Fourier transform:
+
+\begin{equation}
+    H(f) = \sum_{n=0}^{K-1} w_n e^{-j 2\pi f n / f_s}
+    \label{eq:freq_response}
+\end{equation}
+
+where $w_n$ are the kernel weights and $f_s$ is the sampling frequency.
+
+By computing $H(f)$ for each learned filter, we can determine what frequency bands the network has learned to extract. If EEGNet learns valid MI features, we expect filters tuned to the mu band (8-13 Hz) and beta band (13-30 Hz). Filters tuned to very low frequencies ($<$3 Hz) could indicate MRCP extraction or artifact sensitivity.
+
+
+% ------------------------------------------------------------
+\subsection{Depthwise Spatial Convolution}
+\label{subsec:bg_eegnet_spatial}
+
+Following temporal filtering, EEGNet applies depthwise spatial convolutions that combine information across EEG channels. This operation learns spatial filters—weighted combinations of electrodes that emphasize activity in certain brain regions while suppressing others.
+
+\subsubsection{Architecture}
+
+The depthwise convolution uses a kernel of size $(C, 1)$ where $C$ is the number of channels (32 in the Apple Catcher dataset). A depth multiplier $D$ (typically $D = 2$) creates $D$ spatial filters for each temporal filter, yielding $F_1 \times D$ total feature maps.
+
+Critically, each spatial filter operates on a single temporal feature map (hence "depthwise"), learning electrode combinations specific to that frequency band. This is analogous to CSP, where spatial filters are optimized for band-limited signals.
+
+\subsubsection{Interpretation as Spatial Filtering}
+
+The learned weights of each spatial filter can be visualized as a topographic map, showing which electrodes are weighted positively (red) or negatively (blue). A spatial filter focused on motor imagery would show:
+
+\begin{itemize}
+    \item High weights on sensorimotor electrodes (C3, C4, CP3, CP4)
+    \item Opposite-sign weights on contralateral sensorimotor regions (for lateralized discrimination)
+    \item Low weights on irrelevant regions (frontal, occipital)
+\end{itemize}
+
+Conversely, a spatial filter focused on eye movement artifacts would show high weights on frontal electrodes (Fp1, Fp2).
+
+By visualizing all $F_1 \times D$ spatial filters, we can assess whether the network focuses on neurophysiologically appropriate regions or potential artifact sources.
+
+
+% ------------------------------------------------------------
+\subsection{Separable Convolution and Classification}
+\label{subsec:bg_eegnet_separable}
+
+After spatial filtering, EEGNet applies a separable convolution that further processes the feature maps, followed by global average pooling and a dense classification layer.
+
+\subsubsection{Separable Convolution}
+
+The separable convolution consists of a depthwise temporal convolution followed by a pointwise ($1 \times 1$) convolution. This efficiently summarizes temporal patterns while mixing information across feature maps. The output is a compressed representation of the input EEG.
+
+\subsubsection{Classification Head}
+
+The final layers flatten the feature maps and apply a dense layer with softmax activation to produce class probabilities. For binary left/right classification, the output is a 2-element vector.
+
+\subsubsection{Complete Architecture Summary}
+
+Table~\ref{tab:eegnet_architecture} summarizes the EEGNet architecture used in this thesis.
+
+\begin{table}[htbp]
+\centering
+\caption{EEGNet architecture for the Apple Catcher dataset.}
+\label{tab:eegnet_architecture}
+\begin{tabular}{@{}llll@{}}
+\toprule
+\textbf{Layer} & \textbf{Operation} & \textbf{Output Shape} & \textbf{Interpretation} \\
+\midrule
+Input & — & $(1, 32, 750)$ & Raw EEG \\
+Block 1a & Conv2D $(1, 64)$, $F_1=8$ & $(8, 32, 750)$ & Temporal filtering \\
+Block 1b & DepthwiseConv $(32, 1)$, $D=2$ & $(16, 1, 750)$ & Spatial filtering \\
+Block 1c & AvgPool $(1, 8)$ & $(16, 1, 93)$ & Downsampling \\
+Block 2a & SeparableConv $(1, 16)$ & $(16, 1, 93)$ & Feature synthesis \\
+Block 2b & AvgPool $(1, 8)$ & $(16, 1, 11)$ & Downsampling \\
+Output & Flatten $\rightarrow$ Dense(2) & $(2,)$ & Classification \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+The architecture contains approximately 2,000 parameters—orders of magnitude fewer than typical image classification networks. This compactness is achieved through depthwise separable convolutions and is essential for training on limited BCI data.
+
+
+% ============================================================
+% 2.3 INTERPRETABILITY METHODS
+% ============================================================
+\section{Interpretability Methods for Deep Learning}
+\label{sec:bg_interpretability}
+
+Interpretability methods aim to explain what a trained neural network has learned and how it makes decisions. For EEG classification, interpretability serves a specific purpose: validating that the model uses neurophysiologically meaningful features rather than artifacts or spurious correlations.
+
+Two complementary approaches are used in this thesis: filter visualization (what features can the network extract?) and attribution analysis (what features does it use for decisions?).
+
+
+% ------------------------------------------------------------
+\subsection{Filter Visualization}
+\label{subsec:bg_filter_viz}
+
+Filter visualization directly examines the learned weights of convolutional layers. For EEGNet, this reveals what frequency bands and spatial patterns the network has learned to detect.
+
+\subsubsection{Temporal Filter Analysis}
+
+As described in Section~\ref{subsec:bg_eegnet_temporal}, temporal convolution weights can be interpreted as FIR filter impulse responses. The analysis procedure is:
+
+\begin{enumerate}
+    \item Extract the weight tensor from the first convolutional layer
+    \item For each of the $F_1$ filters, compute the magnitude of the discrete Fourier transform
+    \item Plot the frequency response and identify the dominant frequency band
+    \item Compare to canonical EEG bands (delta, theta, mu, beta, gamma)
+\end{enumerate}
+
+This analysis reveals whether the network targets neurophysiologically relevant frequencies.
+
+\subsubsection{Spatial Filter Analysis}
+
+Spatial convolution weights can be visualized as topographic maps showing electrode importance. The procedure is:
+
+\begin{enumerate}
+    \item Extract the weight tensor from the depthwise spatial convolution layer
+    \item For each of the $F_1 \times D$ spatial filters, reshape weights to electrode positions
+    \item Plot as topographic maps using standard EEG visualization
+    \item Assess which brain regions are weighted heavily
+\end{enumerate}
+
+\subsubsection{Limitations}
+
+Filter visualization shows what features the network \textit{can} extract, not necessarily what it \textit{uses} for classification. A filter tuned to the mu band might exist but contribute minimally to the final decision. Attribution methods address this limitation.
+
+
+% ------------------------------------------------------------
+\subsection{Attribution Methods}
+\label{subsec:bg_attribution}
+
+Attribution methods identify which input features influenced a model's output for a specific sample. Given an input EEG trial and the model's classification, attribution produces a map of the same shape as the input, indicating how much each time-point and channel contributed to the decision.
+
+\subsubsection{Gradient-Based Attribution}
+
+The simplest attribution method computes the gradient of the output with respect to the input:
+
+\begin{equation}
+    A_i = \frac{\partial F(x)}{\partial x_i}
+    \label{eq:gradient}
+\end{equation}
+
+where $F(x)$ is the model output (e.g., probability of class 1) and $x_i$ is input element $i$. Large gradient magnitude indicates that small changes to that input element would significantly affect the output.
+
+However, raw gradients have known problems: saturation (gradients vanish for confident predictions), noise, and violation of basic axioms like sensitivity (if a feature matters, it should receive attribution).
+
+\subsubsection{Integrated Gradients}
+
+Integrated Gradients (IG) \cite{sundararajan2017axiomatic} addresses these limitations through an axiomatic approach. Instead of computing gradients at a single point, IG integrates gradients along a path from a baseline input $x'$ to the actual input $x$:
+
+\begin{equation}
+    \text{IG}_i(x) = (x_i - x'_i) \times \int_{\alpha=0}^{1} \frac{\partial F(x' + \alpha(x - x'))}{\partial x_i} \, d\alpha
+    \label{eq:ig}
+\end{equation}
+
+The baseline $x'$ represents an "absence of signal"—typically a zero vector. The integral is approximated by a Riemann sum over $m$ steps:
+
+\begin{equation}
+    \text{IG}_i(x) \approx (x_i - x'_i) \times \frac{1}{m} \sum_{k=1}^{m} \frac{\partial F(x' + \frac{k}{m}(x - x'))}{\partial x_i}
+    \label{eq:ig_approx}
+\end{equation}
+
+IG satisfies two important axioms:
+
+\begin{itemize}
+    \item \textbf{Sensitivity:} If an input feature differs between input and baseline and changes the prediction, it receives non-zero attribution.
+    \item \textbf{Implementation Invariance:} Two models with identical input-output mappings receive identical attributions, regardless of internal architecture.
+\end{itemize}
+
+\subsubsection{Baseline Selection}
+
+The choice of baseline affects attribution. For EEG, a zero baseline represents the absence of any electrical signal—complete neural silence. This is the standard choice and is used in this thesis. Alternative baselines (e.g., mean EEG across trials) are possible but complicate interpretation.
+
+\subsubsection{Aggregation Strategies}
+
+IG produces a per-sample attribution map. To draw general conclusions, attributions must be aggregated:
+
+\begin{itemize}
+    \item \textbf{Per-class:} Average attributions across all correctly-classified trials of each class
+    \item \textbf{Temporal:} Average across channels to obtain a temporal attribution profile
+    \item \textbf{Spatial:} Average across time to obtain a spatial attribution map (topography)
+    \item \textbf{Absolute vs. signed:} Absolute attributions show importance regardless of direction; signed attributions distinguish features that increase vs. decrease class probability
+\end{itemize}
+
+
+% ------------------------------------------------------------
+\subsection{Interpreting Attributions for EEG}
+\label{subsec:bg_attribution_eeg}
+
+Attribution maps for EEG have spatial (channel), temporal, and implicitly frequency dimensions. Interpretation proceeds by examining each:
+
+\subsubsection{Spatial Attribution}
+
+By averaging attribution across time, we obtain a map showing which channels matter for classification. For valid MI classification:
+
+\begin{itemize}
+    \item High attribution at sensorimotor sites (C3, C4, CP3, CP4)
+    \item Contralateral pattern: right-hand trials show C3 attribution, left-hand trials show C4
+    \item Low attribution at frontal sites (unless artifacts dominate)
+\end{itemize}
+
+\subsubsection{Temporal Attribution}
+
+By averaging attribution across channels, we obtain a profile showing which time points matter. Predictions based on competing hypotheses:
+
+\begin{itemize}
+    \item \textbf{ERD hypothesis:} Attribution concentrated in post-cue period when imagery is sustained
+    \item \textbf{MRCP hypothesis:} Attribution builds up in pre-cue period
+    \item \textbf{Artifact hypothesis:} Attribution time-locked to visual stimulus onset
+\end{itemize}
+
+\subsubsection{Comparison to Neurophysiology}
+
+The key validation step is comparing attribution maps to independently-computed neurophysiological maps (e.g., ERDS topography). High spatial correlation between attribution and ERDS suggests the model relies on legitimate neural features. Low correlation—or high attribution in artifact-prone regions—suggests confounds.
+
+
+% ------------------------------------------------------------
+\subsection{Limitations of Interpretability Methods}
+\label{subsec:bg_interpretability_limits}
+
+Interpretability methods have known limitations that should temper conclusions:
+
+\begin{enumerate}
+    \item \textbf{Attribution instability:} Small input perturbations can change attributions significantly. Aggregation across many trials mitigates this.
+    
+    \item \textbf{Method disagreement:} Different attribution methods can highlight different features. IG is chosen for its axiomatic foundations, but alternatives exist.
+    
+    \item \textbf{Correlation vs. causation:} Attribution shows what correlates with decisions, not necessarily what causally drives them. Features may be attributed importance because they correlate with truly causal features.
+    
+    \item \textbf{Baseline dependence:} IG attributions depend on baseline choice. Zero baseline is standard but represents an unnatural neural state.
+\end{enumerate}
+
+This thesis addresses these limitations by using multiple complementary methods (filters + attribution), aggregating across many trials, and comparing results to ground-truth neurophysiology.
+
+
+% ============================================================
+% 2.4 TIME-FREQUENCY ANALYSIS
+% ============================================================
+\section{Time-Frequency Analysis of EEG}
+\label{sec:bg_time_freq}
+
+Independent of the trained model, time-frequency analysis characterizes what neural signatures exist in the dataset. This establishes ground truth against which model behavior is compared.
+
+
+% ------------------------------------------------------------
+\subsection{ERDS Quantification}
+\label{subsec:bg_erds_methods}
+
+ERDS analysis requires decomposing the EEG signal into time-frequency representations and comparing power during task periods to baseline.
+
+\subsubsection{Time-Frequency Decomposition}
+
+Several methods exist for time-frequency decomposition:
+
+\textbf{Short-time Fourier Transform (STFT):} Applies the Fourier transform to sliding windows. Simple but has fixed time-frequency resolution.
+
+\textbf{Morlet Wavelets:} Convolves the signal with wavelets of varying frequency. Provides adaptive time-frequency resolution—better time resolution at high frequencies, better frequency resolution at low frequencies. This is the preferred method for ERDS analysis.
+
+The Morlet wavelet is defined as:
+
+\begin{equation}
+    w(t, f_0) = A \exp\left(-\frac{t^2}{2\sigma_t^2}\right) \exp(2\pi i f_0 t)
+    \label{eq:wavelet}
+\end{equation}
+
+where $f_0$ is the center frequency and $\sigma_t$ controls the temporal width. The number of cycles $n = 2\pi f_0 \sigma_t$ is often set proportional to frequency (e.g., $n = f_0 / 2$) to balance resolution.
+
+\subsubsection{Baseline and ERDS Computation}
+
+After obtaining time-frequency power, ERDS is computed using Equation~\ref{eq:erds}. The baseline period must:
+
+\begin{itemize}
+    \item Precede any task-related activity
+    \item Be long enough for stable power estimation (typically 0.5-1s)
+    \item Not overlap with artifacts (e.g., trial onset transients)
+\end{itemize}
+
+For the Apple Catcher paradigm, baseline selection is complicated by uncertainty about when the apple first appears. This issue is addressed in Chapter~\ref{ch:methods}.
+
+
+% ------------------------------------------------------------
+\subsection{MRCP Extraction}
+\label{subsec:bg_mrcp_methods}
+
+MRCP analysis focuses on slow potentials in the time domain rather than oscillatory activity in the frequency domain.
+
+\subsubsection{Preprocessing}
+
+MRCP extraction requires:
+
+\begin{enumerate}
+    \item Low-pass filtering to isolate slow potentials (typically $<$5 Hz)
+    \item No high-pass filtering (or very low cutoff, e.g., 0.05 Hz) to preserve DC-like components
+    \item Baseline correction to a pre-stimulus period
+\end{enumerate}
+
+The Apple Catcher data was recorded without bandpass filtering and processed without preprocessing for model training. This preserves MRCP information but also low-frequency artifacts.
+
+\subsubsection{Analysis}
+
+MRCP waveforms are obtained by:
+
+\begin{enumerate}
+    \item Applying a low-pass filter (e.g., 3 Hz cutoff)
+    \item Epoching relative to the cue marker
+    \item Averaging across trials to reveal time-locked potentials
+    \item Examining central electrodes (Cz, FCz) for slow negative shifts preceding the cue
+\end{enumerate}
+
+
+% ============================================================
+% 2.5 CHAPTER SUMMARY
+% ============================================================
+\section{Chapter Summary}
+\label{sec:bg_summary}
+
+This chapter established the theoretical foundations for the interpretability analysis:
+
+\begin{itemize}
+    \item \textbf{Valid MI signatures} include mu/beta ERD over contralateral sensorimotor cortex and potentially MRCP at central midline sites.
+    
+    \item \textbf{Artifact confounds} include eye movements (frontal), muscle activity (temporal/frontal), and visual processing (occipital), all of which could be class-discriminative in the Apple Catcher paradigm.
+    
+    \item \textbf{EEGNet architecture} is partially interpretable: temporal filters can be analyzed as bandpass filters, spatial filters as topographic patterns.
+    
+    \item \textbf{Integrated Gradients} reveals which input features drive classification decisions, enabling comparison to neurophysiological ground truth.
+    
+    \item \textbf{Time-frequency analysis} independently characterizes what signals exist in the data, providing a reference for evaluating model behavior.
+\end{itemize}
+
+The Methods chapter describes how these tools are applied to test the competing hypotheses introduced in Chapter~\ref{ch:introduction}.
+
+% Here's the Chapter 2 draft. Some notes:
+% What this chapter covers (~4,500 words, roughly 15-18 pages formatted):
+
+% ERD/ERS — Definition, frequency bands (mu/beta), spatial distribution (contralateral), temporal dynamics, quantification formula
+% MRCP — Bereitschaftspotential, CNV, why it's relevant to Apple Catcher's pre-cue finding
+% Artifacts — Eye movements, muscle artifacts, why they're dangerous for this paradigm specifically
+% EEGNet architecture — All three blocks explained with interpretation angle (temporal = bandpass, spatial = topography)
+% Interpretability methods — Filter visualization, Integrated Gradients with the actual formula, baseline selection, aggregation strategies
+% Time-frequency analysis — Wavelet decomposition, ERDS computation, MRCP extraction
+
+% What I deliberately included:
+
+% The IG formula (Equation 2.4) — reviewers will expect to see this
+% Table 2.1 summarizing EEGNet architecture with output shapes
+% Explicit connection to your hypotheses throughout (e.g., "if ERD is valid, we expect X")
+
+% What you need to add or fix:
+
+% Figures — There are two TODO markers for figures:
+
+% ERD topography illustration (idealized contralateral pattern)
+% You could add an EEGNet architecture diagram
+
+
+% Electrode list — I mention C3, C4, etc. but you should verify these match your actual 32-channel montage. If your cap doesn't have exactly C3/C4, adjust accordingly.
+% Wavelet parameters — I give the general formula but you'll need to specify what you actually use (e.g., n_cycles = freqs / 2) in Chapter 4.
+% Citation check — I referenced the key papers (Pfurtscheller, Lawhern, Sundararajan) but you should verify these are the correct citations for each claim.
+
+% What I intentionally left out:
+
+% Deep dive into CSP (you're not using it, just drawing analogy)
+% Other attribution methods (SHAP, LRP, GradCAM) — mentioned briefly in limitations but not detailed since you're using IG
+% Detailed math on wavelets beyond what's needed to understand ERDS
+
+% Potential concern:
+% The MRCP section might be too long if you ultimately find no MRCP in your data. If your results show MRCP isn't present, you can trim 2.1.2 down to a paragraph that says "MRCP exists but wasn't observed in this dataset."
