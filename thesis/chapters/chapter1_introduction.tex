@@ -1,0 +1,182 @@
+% chapters/chapter1_introduction.tex
+\chapter{Introduction}
+\label{ch:introduction}
+
+% ============================================================
+% 1.1 CONTEXT AND MOTIVATION
+% ============================================================
+\section{Brain-Computer Interfaces for Motor Rehabilitation}
+\label{sec:intro_context}
+
+Brain-Computer Interfaces (BCI) aim to establish a direct communication pathway between the brain and external devices, bypassing the body's normal neuromuscular output channels \cite{wolpaw2002brain}. Among the various BCI paradigms, Motor Imagery (MI) has attracted particular attention for rehabilitation applications. MI refers to the mental rehearsal of movement without physical execution—imagining the sensation of clenching a fist, for instance, rather than actually doing so. Neuroimaging studies have established that MI activates sensorimotor cortical regions overlapping substantially with those engaged during actual movement \cite{pfurtscheller2001motor}, suggesting that repeated MI practice could promote neuroplasticity and support motor recovery in patients with stroke or spinal cord injury.
+
+The appeal of MI-BCI for rehabilitation is straightforward: patients who cannot move can still imagine moving, and this mental practice—when detected and reinforced by a BCI system—may help rebuild damaged motor pathways. However, the gap between this promise and clinical reality remains wide. A persistent barrier is the inter-subject variability of electroencephalography (EEG) signals. Brain anatomy, cognitive strategies for performing imagery, and even the interpretation of task instructions differ substantially between individuals \cite{lotte2018review}. Consequently, a classifier trained on one population often performs poorly on new users without extensive recalibration—a process that is tedious for healthy subjects and potentially exhausting for patients.
+
+Recent advances in deep learning have offered new tools for addressing this challenge. Convolutional neural networks (CNNs) can learn hierarchical spatial and temporal features directly from raw EEG, eliminating the need for hand-crafted feature engineering. Transfer learning strategies enable models trained on large source populations to adapt to new target subjects with minimal calibration data. These developments have driven reported classification accuracies upward, sometimes dramatically so.
+
+Yet accuracy alone is an insufficient metric for evaluating a BCI system. A model that achieves high accuracy by exploiting artifacts—eye movements, muscle tension, or electrode noise correlated with the task—is scientifically meaningless and clinically useless. This concern is especially acute for deep learning models, which operate as "black boxes" that resist straightforward interpretation. Without understanding \textit{what} a model has learned, we cannot know whether its performance reflects legitimate neural signal or spurious confounds.
+
+
+% ============================================================
+% 1.2 THE APPLE CATCHER PARADIGM
+% ============================================================
+\section{The Apple Catcher Paradigm}
+\label{sec:intro_apple_catcher}
+
+This thesis investigates the Apple Catcher system, a gamified MI-BCI developed for hand rehabilitation \cite{skredsvig2025apple}. In this paradigm, subjects view a screen displaying a tree with two virtual hands positioned below. An apple detaches from the tree and falls toward either the left or right hand. The subject's task is to imagine clenching the corresponding hand to "catch" the apple. Visual feedback is provided based on the system's classification of the ongoing EEG signal.
+
+The gamified design serves two purposes. First, it increases engagement compared to traditional cue-based paradigms that simply display arrows or text instructions. Second, it provides a naturalistic context for motor imagery: catching a falling object is an intuitive action with clear timing demands. However, this design also introduces potential confounds that are central to the present investigation.
+
+In prior work \cite{fritzner2025specialization}, I trained an EEGNet classifier on the Apple Catcher dataset (40 subjects, 200 trials each) using a leave-one-subject-out cross-validation protocol. The model achieved 78.1\% cross-subject accuracy—a strong result for MI-BCI, where 70\% is often considered the threshold for practical usability. Transfer learning experiments demonstrated that both supervised fine-tuning and unsupervised domain adaptation (DANN) could improve upon a baseline model, with supervised fine-tuning achieving the best overall performance.
+
+However, a puzzling finding emerged from the temporal window analysis. Standard MI-BCI pipelines extract epochs beginning at the cue onset (t = 0) and extending through the imagery period. In contrast, I found that a window spanning -1.0s to 2.0s—including one second \textit{before} the formal cue—substantially outperformed a purely post-cue window (0.0s to 3.0s). Specifically:
+
+\begin{itemize}
+    \item Pre-cue window (-3.0s to 0.0s): 70.7\% accuracy
+    \item Post-cue window (0.0s to 3.0s): 58.0\% accuracy
+    \item Combined window (-1.0s to 2.0s): 74.7\% accuracy
+\end{itemize}
+
+This result is counterintuitive. If the model were learning classical motor imagery signatures—event-related desynchronization (ERD) in the mu and beta frequency bands—we would expect the post-cue period, when subjects are actively imagining movement, to be most informative. Instead, the pre-cue period alone achieved 70.7\%, outperforming the post-cue period by over 12 percentage points.
+
+The explanation lies in the Apple Catcher paradigm design. Critically, the apple begins falling \textit{before} the formal cue marker (t = 0) that is used for epoch alignment. Subjects therefore receive visual information about which hand to imagine—left or right—during what is nominally the "baseline" period. This creates a fundamental ambiguity: does the pre-cue discriminability reflect legitimate motor preparation (subjects beginning to plan their imagery), or does it reflect artifacts and confounds introduced by the visual stimulus?
+
+Figure~\ref{fig:trial_timeline} illustrates this ambiguity. The falling apple is a lateralized visual stimulus that could induce eye movements (tracking the apple), visual evoked potentials, or shifts in spatial attention—all of which would be class-discriminative but neurally distinct from motor imagery.
+
+% TODO: Add figure showing trial timeline with apple onset, cue, and analysis windows
+
+
+% ============================================================
+% 1.3 THE INTERPRETABILITY PROBLEM
+% ============================================================
+\section{The Interpretability Problem}
+\label{sec:intro_interpretability_problem}
+
+The 78\% cross-subject accuracy reported in prior work is meaningless without understanding what drives it. Consider two scenarios:
+
+\textbf{Scenario A (Legitimate):} The model learns that left-hand motor imagery produces ERD over the right sensorimotor cortex (contralateral to the imagined movement), while right-hand imagery produces ERD over the left sensorimotor cortex. This is the expected neurophysiological pattern, and a model exploiting it would generalize to new subjects and, critically, to patients who cannot produce normal eye movements or other artifacts.
+
+\textbf{Scenario B (Illegitimate):} The model learns that when the apple falls left, subjects' eyes track leftward, producing a characteristic pattern in frontal EEG channels. This eye movement artifact is perfectly correlated with the class label and highly discriminative—but it has nothing to do with motor imagery. Such a model would fail catastrophically for a paralyzed patient whose oculomotor control may also be impaired, or in any setting where eye movements do not correlate with the intended action.
+
+Deep learning models are agnostic to this distinction. A CNN trained to minimize classification error will exploit whatever signal is most discriminative, regardless of its neural origin. This is not a flaw in the algorithm; it is doing exactly what we asked. The flaw is in assuming that high accuracy implies valid neural decoding.
+
+The problem is compounded by the black-box nature of deep networks. Unlike traditional BCI pipelines that use interpretable spatial filters (e.g., Common Spatial Patterns) operating on defined frequency bands, a CNN learns arbitrary nonlinear transformations of the input. We cannot simply inspect the model weights and understand what features it uses. Dedicated interpretability methods are required.
+
+This thesis therefore asks a simple but essential question: \textbf{What is the Apple Catcher model actually learning?} Is the 78\% accuracy a scientific achievement or a methodological artifact? The answer determines whether the system can proceed to clinical deployment or requires fundamental redesign.
+
+
+% ============================================================
+% 1.4 RESEARCH QUESTIONS
+% ============================================================
+\section{Research Questions}
+\label{sec:intro_rqs}
+
+To address the interpretability problem, this thesis pursues three research questions:
+
+\begin{description}
+    \item[RQ1:] \textit{What neural and artifactual signatures are present in the Apple Catcher dataset?}
+    
+    Before evaluating what the model learned, we must establish ground truth: what discriminative information actually exists in the data? This requires neurophysiological analysis independent of the trained model—specifically, time-frequency analysis to characterize event-related desynchronization, and examination of slow cortical potentials that might reflect motor preparation.
+    
+    \item[RQ2:] \textit{Which features does EEGNet learn to extract?}
+    
+    EEGNet's architecture is partially interpretable by design: temporal convolutions can be analyzed as learned bandpass filters, and spatial convolutions as learned electrode weightings. By visualizing these filters, we can determine whether the model targets neurophysiologically plausible frequency bands (mu, beta) and brain regions (sensorimotor cortex).
+    
+    \item[RQ3:] \textit{Which features drive classification decisions, and are they neurophysiologically plausible?}
+    
+    What a model extracts may differ from what it uses for classification. Attribution methods—specifically Integrated Gradients—can identify which input features most influence the model's decisions. By comparing these attributions to the neurophysiological ground truth from RQ1, we can assess whether the model's decision-making is scientifically valid.
+\end{description}
+
+
+% ============================================================
+% 1.5 COMPETING HYPOTHESES
+% ============================================================
+\section{Competing Hypotheses}
+\label{sec:intro_hypotheses}
+
+Rather than assuming the model is valid and seeking post-hoc confirmation, this thesis frames the investigation as a test between competing hypotheses. Each hypothesis makes specific, falsifiable predictions about spatial distribution, temporal profile, and frequency content. Table~\ref{tab:hypotheses} summarizes these predictions.
+
+\begin{table}[htbp]
+\centering
+\caption{Competing hypotheses and their testable predictions.}
+\label{tab:hypotheses}
+\begin{tabular}{@{}llll@{}}
+\toprule
+\textbf{Hypothesis} & \textbf{Spatial} & \textbf{Temporal} & \textbf{Frequency} \\
+\midrule
+Eye/muscle artifacts & Frontal (Fp1, Fp2) & Time-locked to apple & Broadband / low freq \\
+Classical ERD & Contralateral C3/C4 & Sustained post-cue & Mu (8-13 Hz), Beta (13-30 Hz) \\
+Motor preparation (MRCP) & Central midline (Cz) & Pre-cue buildup & Very low ($<$3 Hz) \\
+Visual processing & Occipital (O1, O2) & Early transient & Alpha, VEP components \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\textbf{Hypothesis 1: Artifacts.} If eye movements or muscle tension drive classification, we expect discriminative activity at frontal electrode sites (Fp1, Fp2, F7, F8), time-locked to the appearance of the visual stimulus. The model's spatial filters would weight frontal channels heavily, and attribution analysis would highlight frontal regions. This would be the most concerning finding, as it implies the reported accuracy is not meaningful for rehabilitation applications.
+
+\textbf{Hypothesis 2: Classical ERD.} If the model learns legitimate motor imagery signatures, we expect to find ERD in the mu (8-13 Hz) and beta (13-30 Hz) bands over contralateral sensorimotor cortex—C3 for right-hand imagery, C4 for left-hand imagery. The model's temporal filters would target these frequency bands, spatial filters would focus on the sensorimotor region, and attribution would highlight C3/C4 during the imagery period. This would validate the paradigm.
+
+\textbf{Hypothesis 3: Motor Preparation (MRCP).} Movement-related cortical potentials are slow negative shifts that begin 1-2 seconds before movement onset, reflecting motor planning. If subjects begin preparing their motor imagery upon seeing the falling apple, MRCP-like activity could appear in the pre-cue period. This would manifest as low-frequency ($<$3 Hz) activity at central midline sites (Cz, FCz), with model filters targeting very low frequencies and attribution concentrated in the pre-cue period. This finding would be scientifically interesting—it would explain the pre-cue superiority—but its clinical relevance would require further investigation.
+
+\textbf{Hypothesis 4: Visual Processing.} The falling apple is a lateralized visual stimulus. Visual evoked potentials and attention-related modulations could produce class-discriminative activity at occipital sites. This would indicate that the model classifies based on where subjects look or attend, rather than what they imagine.
+
+The most likely outcome is that multiple sources contribute. The goal is to quantify their relative contributions and determine which, if any, dominates classification.
+
+
+% ============================================================
+% 1.6 CONTRIBUTIONS
+% ============================================================
+\section{Contributions}
+\label{sec:intro_contributions}
+
+This thesis makes the following contributions:
+
+\begin{enumerate}
+    \item \textbf{Systematic interpretability analysis of a cross-subject MI-BCI model.} I apply complementary interpretability methods—neurophysiological analysis, filter visualization, and attribution—to a trained EEGNet model. This provides a template for validating deep learning models in BCI applications.
+    
+    \item \textbf{Hypothesis-driven validation framework.} Rather than assuming model validity, I define competing hypotheses with testable predictions and score evidence systematically. This approach is more rigorous than post-hoc interpretation and could be adopted in future BCI studies.
+    
+    \item \textbf{Assessment of the Apple Catcher paradigm.} The analysis provides concrete evidence about what drives classification in this system, informing decisions about clinical deployment or paradigm redesign.
+    
+    \item \textbf{Methodological insights for visual MI-BCI.} The Apple Catcher's visual cue design is not unique; many MI-BCI paradigms use lateralized visual stimuli. Findings about artifact confounds and pre-cue activity generalize beyond this specific system.
+\end{enumerate}
+
+
+% ============================================================
+% 1.7 THESIS OUTLINE
+% ============================================================
+\section{Thesis Outline}
+\label{sec:intro_outline}
+
+The remainder of this thesis is organized as follows:
+
+\textbf{Chapter 2: Background and Theory} reviews the neurophysiology of motor imagery, including event-related desynchronization and movement-related cortical potentials. It describes the EEGNet architecture and explains interpretability methods including filter visualization and Integrated Gradients.
+
+\textbf{Chapter 3: Related Work} surveys prior research on interpretability in EEG-based deep learning, validation of learned features against neurophysiology, and artifact handling in MI-BCI.
+
+\textbf{Chapter 4: Materials and Methods} describes the Apple Catcher dataset, the trained model under investigation, and the analysis pipeline. It operationalizes each hypothesis into specific quantitative tests.
+
+\textbf{Chapter 5: Results} presents findings organized by research question: neurophysiological characterization (RQ1), filter analysis (RQ2), and attribution analysis (RQ3). It concludes with a systematic scoring of the competing hypotheses.
+
+\textbf{Chapter 6: Discussion} interprets the findings, assesses implications for Apple Catcher deployment, and draws broader lessons for visual MI-BCI design.
+
+\textbf{Chapter 7: Conclusion} summarizes the contributions, acknowledges limitations, and identifies directions for future work.
+
+% Here's the introduction draft. A few notes on what I wrote and what you should review:
+% What the draft does well:
+
+% Frames the problem honestly — It doesn't celebrate the 78% accuracy; it questions it. This sets up the forensic investigation angle.
+% The core tension is clear — Pre-cue outperforming post-cue is suspicious, and the reader understands why within the first few pages.
+% Competing hypotheses with predictions — Table 1.1 makes the thesis testable. Each hypothesis can be scored based on evidence.
+
+% What you need to fix or verify:
+
+% The exact pre-cue window results — I used numbers from your specialization project (70.7%, 58.0%, 74.7%). Double-check these are accurate.
+% Apple onset timing — I wrote that the apple begins falling before t=0, but I don't actually know the exact timing. You need to either find this information or explicitly state it's undocumented. This is a significant limitation.
+% Figure reference — There's a TODO for a trial timeline figure. You should create this — it's essential for readers to understand the paradigm.
+% Citation for "70% threshold" — I mentioned 70% as a usability threshold. This is commonly cited but you should find a proper reference or remove it.
+
+% Structural decisions you might reconsider:
+
+% The hypotheses section is fairly long. You could move the detailed predictions to Chapter 4 (Methods) and keep only a brief overview here.
+% I didn't include a "motivation" subsection about stroke rehabilitation. If your supervisor expects this, you may need to add 0.5-1 page on the clinical context.
