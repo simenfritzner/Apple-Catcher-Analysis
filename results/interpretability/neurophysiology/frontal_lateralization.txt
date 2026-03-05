@@ -1,0 +1,5 @@
+Frontal Lateralization Index (F3,F1 vs F4,F2)
+MI_left:  -0.027498 ± 0.244113
+MI_right: -0.024069 ± 0.242370
+t-test: t=-0.6359, p=5.248537e-01
+Note: No Fp1/Fp2 in montage; using F3,F1 (left) vs F4,F2 (right)
