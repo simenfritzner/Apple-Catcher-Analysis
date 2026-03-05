@@ -1,0 +1,25 @@
+Spatial Filter ROI Ratios
+======================================================================
+ROIs: sensorimotor (14 ch), frontal (9 ch), parietal (8 ch)
+Note: No occipital channels in montage; parietal used as nearest alternative
+
+  Filter   R_sensorimotor   R_frontal   R_parietal   Dominant ROI
+----------------------------------------------------------------------
+       0           0.4736      0.3006       0.2046   sensorimotor
+       1           0.3720      0.4011       0.1918        frontal
+       2           0.5044      0.2992       0.1918   sensorimotor
+       3           0.4564      0.2103       0.2424   sensorimotor
+       4           0.4693      0.2632       0.2071   sensorimotor
+       5           0.2740      0.5228       0.1921        frontal
+       6           0.5404      0.1902       0.2423   sensorimotor
+       7           0.5212      0.1467       0.2776   sensorimotor
+       8           0.5212      0.2343       0.2269   sensorimotor
+       9           0.4644      0.3451       0.1590   sensorimotor
+      10           0.4028      0.4110       0.1634        frontal
+      11           0.4934      0.3344       0.1716   sensorimotor
+      12           0.4005      0.2575       0.2374   sensorimotor
+      13           0.4892      0.2116       0.2557   sensorimotor
+      14           0.3691      0.3224       0.3055   sensorimotor
+      15           0.3585      0.4541       0.1844        frontal
+----------------------------------------------------------------------
+    MEAN           0.4444      0.3065       0.2159
